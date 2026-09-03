@@ -1,291 +1,304 @@
 (function () {
-  // ============================================================
-  // LEMODZ — Auth + Premium + Download methods
-  // ============================================================
-
-  const STORAGE_USERS = "lemodz_users";
-  const STORAGE_SESSION = "lemodz_session";
+  const USERS_KEY = "lemodz_users";
+  const SESSION_KEY = "lemodz_session";
 
   function getUsers() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_USERS) || "{}");
-    } catch (e) {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem(USERS_KEY) || "{}"); } catch (e) { return {}; }
   }
-
-  function saveUsers(users) {
-    localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
-  }
-
+  function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
   function getSession() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_SESSION) || "null");
-    } catch (e) {
-      return null;
-    }
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; }
   }
-
-  function saveSession(user) {
-    if (user) localStorage.setItem(STORAGE_SESSION, JSON.stringify(user));
-    else localStorage.removeItem(STORAGE_SESSION);
+  function setSession(u) {
+    if (u) localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+    else localStorage.removeItem(SESSION_KEY);
   }
-
-  function saveAccount(user) {
-    saveSession(user);
-  }
-
-  let currentUser = getSession();
-
-  function isPremiumActive(user) {
+  function isPremium(user) {
     if (!user || !user.isPremium) return false;
     if (!user.premiumUntil) return true;
     return Date.now() < user.premiumUntil;
   }
 
-  // DOM
-  const menuOpen = document.getElementById("menu-open");
-  const menuClose = document.getElementById("menu-close");
+  let currentUser = getSession();
+
   const menu = document.getElementById("side-menu");
-  const menuOverlay = document.getElementById("menu-overlay");
-  const authChip = document.getElementById("auth-chip");
-  const authChipText = document.getElementById("auth-chip-text");
-  const btnLogout = document.getElementById("btn-logout");
-  const btnSignIn = document.getElementById("btn-sign-in");
-  const btnSignUp = document.getElementById("btn-sign-up");
+  const overlay = document.getElementById("menu-overlay");
+  const openBtn = document.getElementById("menu-open");
+  const closeBtn = document.getElementById("menu-close");
+  const links = document.querySelectorAll(".menu-link");
+  const pages = document.querySelectorAll(".page-section");
+  const categoryBar = document.getElementById("category-bar");
+  const authArea = document.getElementById("auth-area");
+  const sideStatus = document.getElementById("side-account-status");
 
-  function openMenu() {
-    if (menu) menu.classList.add("open");
-    if (menuOverlay) menuOverlay.classList.add("open");
-    document.body.style.overflow = "hidden";
-  }
-  function closeMenu() {
-    if (menu) menu.classList.remove("open");
-    if (menuOverlay) menuOverlay.classList.remove("open");
-    document.body.style.overflow = "";
-  }
-  if (menuOpen) menuOpen.addEventListener("click", openMenu);
-  if (menuClose) menuClose.addEventListener("click", closeMenu);
-  if (menuOverlay) menuOverlay.addEventListener("click", closeMenu);
-
-  function refreshAuthUI() {
-    currentUser = getSession();
-    const premium = isPremiumActive(currentUser);
-    if (authChip && authChipText) {
-      if (currentUser) {
-        authChip.hidden = false;
-        authChipText.textContent = premium
-          ? (currentUser.email.split("@")[0] + " · Premium")
-          : currentUser.email.split("@")[0];
-        authChip.classList.toggle("premium", premium);
-      } else {
-        authChip.hidden = true;
-      }
-    }
-    if (btnLogout) btnLogout.hidden = !currentUser;
-    if (btnSignIn) btnSignIn.hidden = !!currentUser;
-    if (btnSignUp) btnSignUp.hidden = !!currentUser;
-  }
-
-  // Auth modal
-  const authOverlay = document.getElementById("auth-overlay");
-  const authModal = document.getElementById("auth-modal");
-  const authClose = document.getElementById("auth-close");
-  const authTitle = document.getElementById("auth-title");
-  const authForm = document.getElementById("auth-form");
-  const authEmail = document.getElementById("auth-email");
-  const authPassword = document.getElementById("auth-password");
-  const authSubmit = document.getElementById("auth-submit");
-  const authMsg = document.getElementById("auth-msg");
-  const authSwitch = document.getElementById("auth-switch");
-  let authMode = "signin";
-
-  function openAuth(mode) {
-    authMode = mode || "signin";
-    if (authTitle) authTitle.textContent = authMode === "signup" ? "Sign Up" : "Sign In";
-    if (authSubmit) authSubmit.textContent = authMode === "signup" ? "Create Account" : "Sign In";
-    if (authSwitch) {
-      authSwitch.innerHTML =
-        authMode === "signup"
-          ? 'Already have an account? <button type="button" id="auth-switch-btn" class="link-btn">Sign In</button>'
-          : 'New here? <button type="button" id="auth-switch-btn" class="link-btn">Sign Up</button>';
-      const sw = document.getElementById("auth-switch-btn");
-      if (sw) sw.addEventListener("click", () => openAuth(authMode === "signup" ? "signin" : "signup"));
-    }
-    if (authMsg) authMsg.textContent = "";
-    if (authForm) authForm.reset();
-    if (authOverlay) authOverlay.hidden = false;
-    if (authModal) authModal.hidden = false;
-    document.body.style.overflow = "hidden";
-  }
-
-  function closeAuth() {
-    if (authOverlay) authOverlay.hidden = true;
-    if (authModal) authModal.hidden = true;
-    if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
-  }
-  if (authClose) authClose.addEventListener("click", closeAuth);
-  if (authOverlay) authOverlay.addEventListener("click", closeAuth);
-  if (btnSignIn) btnSignIn.addEventListener("click", () => { closeMenu(); openAuth("signin"); });
-  if (btnSignUp) btnSignUp.addEventListener("click", () => { closeMenu(); openAuth("signup"); });
-  if (btnLogout) {
-    btnLogout.addEventListener("click", () => {
-      saveSession(null);
-      currentUser = null;
-      refreshAuthUI();
-      closeMenu();
-    });
-  }
-
-  if (authForm) {
-    authForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = (authEmail && authEmail.value || "").trim().toLowerCase();
-      const password = (authPassword && authPassword.value) || "";
-      if (!email || !password) {
-        if (authMsg) authMsg.textContent = "Email and password required.";
-        return;
-      }
-      const users = getUsers();
-      if (authMode === "signup") {
-        if (users[email]) {
-          if (authMsg) authMsg.textContent = "Account already exists. Sign In instead.";
-          return;
-        }
-        users[email] = { email, password, isPremium: false, premiumUntil: null };
-        saveUsers(users);
-        currentUser = { email, isPremium: false, premiumUntil: null };
-        saveAccount(currentUser);
-        if (authMsg) authMsg.textContent = "Account created! You are signed in.";
-        refreshAuthUI();
-        setTimeout(closeAuth, 800);
-      } else {
-        const u = users[email];
-        if (!u || u.password !== password) {
-          if (authMsg) authMsg.textContent = "Invalid email or password.";
-          return;
-        }
-        currentUser = {
-          email: u.email,
-          isPremium: !!u.isPremium,
-          premiumUntil: u.premiumUntil || null,
-        };
-        saveAccount(currentUser);
-        if (authMsg) authMsg.textContent = "Signed in.";
-        refreshAuthUI();
-        setTimeout(closeAuth, 600);
-      }
-    });
-  }
-
-  // Category tabs
-  document.querySelectorAll(".category-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const cat = btn.dataset.category;
-      document.querySelectorAll(".category-btn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      document.querySelectorAll(".mod-card").forEach((card) => {
-        const c = card.dataset.category;
-        card.style.display = !cat || cat === "all" || c === cat ? "" : "none";
-      });
-    });
-  });
-
-  // Pages
-  document.querySelectorAll("[data-page]").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const page = link.dataset.page;
-      document.querySelectorAll(".page-section").forEach((s) => s.classList.remove("active"));
-      const target = document.getElementById("page-" + page);
-      if (target) target.classList.add("active");
-      document.querySelectorAll(".menu-link").forEach((l) => l.classList.remove("active"));
-      link.classList.add("active");
-      closeMenu();
-    });
-  });
-
-  // Download modal
   const lootOverlay = document.getElementById("loot-overlay");
   const lootModal = document.getElementById("loot-modal");
   const lootClose = document.getElementById("loot-close");
-  const lootFileLabel = document.getElementById("loot-file-label");
   const lootContinue = document.getElementById("loot-continue");
-  const lootDirect = document.getElementById("loot-direct");
-  const lootPremium = document.getElementById("loot-premium");
+  const lootFileLabel = document.getElementById("loot-file-label");
+  const btnDirect = document.getElementById("btn-direct-dl");
+  const directLock = document.getElementById("direct-lock");
+  const directNote = document.getElementById("direct-note");
+  const btnBuyPremium = document.getElementById("btn-buy-premium");
 
-  function openLoot(btn) {
-    const file = btn.dataset.file || "—";
-    const lootUrl = btn.dataset.loot || "#";
-    const direct = btn.dataset.direct || "";
-    if (lootFileLabel) lootFileLabel.textContent = file;
-    if (lootContinue) {
-      lootContinue.href = lootUrl;
-      lootContinue.style.display = "";
-    }
-    if (lootDirect) {
-      if (direct) {
-        lootDirect.dataset.file = direct;
-        lootDirect.style.display = "";
-      } else {
-        lootDirect.style.display = "none";
-      }
-    }
-    if (lootOverlay) lootOverlay.hidden = false;
-    if (lootModal) lootModal.hidden = false;
-    document.body.style.overflow = "hidden";
-  }
+  const authModal = document.getElementById("auth-modal");
+  const authClose = document.getElementById("auth-close");
+  const formSignin = document.getElementById("form-signin");
+  const formSignup = document.getElementById("form-signup");
 
-  function closeLoot() {
-    if (lootOverlay) lootOverlay.hidden = true;
-    if (lootModal) lootModal.hidden = true;
-    if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
-  }
-  if (lootClose) lootClose.addEventListener("click", closeLoot);
-  if (lootOverlay) lootOverlay.addEventListener("click", closeLoot);
-
-  document.querySelectorAll(".loot-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      openLoot(btn);
-    });
-  });
-
-  if (lootDirect) {
-    lootDirect.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (!isPremiumActive(currentUser)) {
-        closeLoot();
-        openPremium();
-        return;
-      }
-      const file = lootDirect.dataset.file;
-      if (file) window.location.href = "download.html?file=" + encodeURIComponent(file);
-    });
-  }
-
-  // Premium modal
-  const premiumOverlay = document.getElementById("premium-overlay");
   const premiumModal = document.getElementById("premium-modal");
   const premiumClose = document.getElementById("premium-close");
   const premiumMsg = document.getElementById("premium-msg");
 
-  function openPremium() {
-    if (premiumOverlay) premiumOverlay.hidden = false;
+  let currentDirectUrl = null;
+  let currentLabel = "";
+
+  function isAnyModalOpen() {
+    return (lootModal && !lootModal.hidden) || (authModal && !authModal.hidden) || (premiumModal && !premiumModal.hidden);
+  }
+
+  function openMenu() {
+    if (!menu) return;
+    menu.classList.add("open");
+    if (overlay) overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeMenu() {
+    if (!menu) return;
+    menu.classList.remove("open");
+    if (overlay) overlay.classList.remove("open");
+    if (!isAnyModalOpen()) document.body.style.overflow = "";
+  }
+  if (openBtn) openBtn.addEventListener("click", openMenu);
+  if (closeBtn) closeBtn.addEventListener("click", closeMenu);
+  if (overlay) {
+    overlay.addEventListener("click", () => { closeMenu(); closeAllModals(); });
+  }
+
+  links.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const page = link.getAttribute("data-page");
+      if (!page) return;
+      e.preventDefault();
+      links.forEach((l) => l.classList.remove("active"));
+      link.classList.add("active");
+      pages.forEach((p) => p.classList.remove("active"));
+      const target = document.getElementById("page-" + page);
+      if (target) target.classList.add("active");
+      if (categoryBar) categoryBar.hidden = page !== "home";
+      closeMenu();
+    });
+  });
+
+  const menuPremium = document.getElementById("menu-premium");
+  if (menuPremium) {
+    menuPremium.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeMenu();
+      openPremiumModal();
+    });
+  }
+
+  document.querySelectorAll(".cat-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.category;
+      document.querySelectorAll(".cat-btn").forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      document.querySelectorAll(".mod-category").forEach((cat) => {
+        const match = cat.dataset.category === target;
+        cat.classList.toggle("active", match);
+        if (match) cat.removeAttribute("hidden");
+        else cat.setAttribute("hidden", "");
+      });
+    });
+  });
+
+  function refreshAuthUI() {
+    currentUser = getSession();
+    const premium = isPremium(currentUser);
+    if (sideStatus) {
+      sideStatus.textContent = currentUser
+        ? (premium ? currentUser.email + " · Premium" : currentUser.email)
+        : "Not signed in";
+    }
+    if (authArea) {
+      if (currentUser) {
+        authArea.innerHTML =
+          '<span class="auth-chip' + (premium ? " premium" : "") + '">' +
+          (currentUser.name || currentUser.email.split("@")[0]) +
+          (premium ? " · Premium" : "") +
+          '</span><button type="button" class="btn-auth" id="btn-logout">Logout</button>';
+        const logoutBtn = document.getElementById("btn-logout");
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", () => {
+            setSession(null);
+            currentUser = null;
+            refreshAuthUI();
+            updateDirectButton();
+          });
+        }
+      } else {
+        authArea.innerHTML =
+          '<button type="button" class="btn-auth" id="btn-signin">Sign In</button>' +
+          '<button type="button" class="btn-auth btn-auth-primary" id="btn-signup">Sign Up</button>';
+        const si = document.getElementById("btn-signin");
+        const su = document.getElementById("btn-signup");
+        if (si) si.addEventListener("click", () => openAuthModal("signin"));
+        if (su) su.addEventListener("click", () => openAuthModal("signup"));
+      }
+    }
+    updateDirectButton();
+  }
+
+  function updateDirectButton() {
+    const ok = isPremium(currentUser);
+    if (btnDirect) {
+      btnDirect.disabled = !ok;
+      if (directLock) directLock.hidden = ok;
+      if (directNote) {
+        directNote.textContent = ok
+          ? "Premium active — download starts immediately."
+          : "Requires LEMODZ Premium.";
+      }
+    }
+  }
+
+  function openAuthModal(tab) {
+    if (!authModal) return;
+    authModal.hidden = false;
+    if (lootOverlay) lootOverlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    switchAuthTab(tab || "signin");
+  }
+  function closeAuthModal() {
+    if (authModal) authModal.hidden = true;
+    if (lootOverlay && lootModal && lootModal.hidden && premiumModal && premiumModal.hidden) {
+      lootOverlay.hidden = true;
+      if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
+    }
+  }
+  if (authClose) authClose.addEventListener("click", closeAuthModal);
+
+  function switchAuthTab(tab) {
+    document.querySelectorAll(".auth-tab").forEach((t) => {
+      t.classList.toggle("active", t.dataset.tab === tab);
+    });
+    if (formSignin) formSignin.hidden = tab !== "signin";
+    if (formSignup) formSignup.hidden = tab !== "signup";
+    const sm = document.getElementById("signin-msg");
+    const um = document.getElementById("signup-msg");
+    if (sm) sm.textContent = "";
+    if (um) um.textContent = "";
+  }
+  document.querySelectorAll(".auth-tab").forEach((tab) => {
+    tab.addEventListener("click", () => switchAuthTab(tab.dataset.tab));
+  });
+
+  if (formSignin) {
+    formSignin.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = (document.getElementById("signin-email") || {}).value || "";
+      const password = (document.getElementById("signin-password") || {}).value || "";
+      const msg = document.getElementById("signin-msg");
+      const users = getUsers();
+      const key = email.trim().toLowerCase();
+      const u = users[key];
+      if (!u || u.password !== password) {
+        if (msg) msg.textContent = "Invalid email or password.";
+        return;
+      }
+      currentUser = { email: u.email, name: u.name, isPremium: !!u.isPremium, premiumUntil: u.premiumUntil || null };
+      setSession(currentUser);
+      if (msg) msg.textContent = "Signed in!";
+      refreshAuthUI();
+      setTimeout(closeAuthModal, 500);
+    });
+  }
+
+  if (formSignup) {
+    formSignup.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = (document.getElementById("signup-name") || {}).value || "";
+      const email = (document.getElementById("signup-email") || {}).value || "";
+      const password = (document.getElementById("signup-password") || {}).value || "";
+      const msg = document.getElementById("signup-msg");
+      const key = email.trim().toLowerCase();
+      const users = getUsers();
+      if (users[key]) {
+        if (msg) msg.textContent = "Account already exists. Sign in instead.";
+        return;
+      }
+      users[key] = { email: key, name: name.trim(), password, isPremium: false, premiumUntil: null };
+      saveUsers(users);
+      currentUser = { email: key, name: name.trim(), isPremium: false, premiumUntil: null };
+      setSession(currentUser);
+      if (msg) msg.textContent = "Account created!";
+      refreshAuthUI();
+      setTimeout(closeAuthModal, 500);
+    });
+  }
+
+  function openLootModal(lootUrl, label, directUrl) {
+    currentLabel = label || "—";
+    currentDirectUrl = directUrl || null;
+    if (lootFileLabel) lootFileLabel.textContent = currentLabel;
+    if (lootContinue) lootContinue.href = lootUrl || "#";
+    updateDirectButton();
+    if (lootModal) lootModal.hidden = false;
+    if (lootOverlay) lootOverlay.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+  function closeLootModal() {
+    if (lootModal) lootModal.hidden = true;
+    if (lootOverlay && authModal && authModal.hidden && premiumModal && premiumModal.hidden) {
+      lootOverlay.hidden = true;
+      if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
+    }
+  }
+  if (lootClose) lootClose.addEventListener("click", closeLootModal);
+
+  document.querySelectorAll(".loot-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openLootModal(btn.dataset.loot, btn.dataset.label, btn.dataset.direct);
+    });
+  });
+
+  if (btnDirect) {
+    btnDirect.addEventListener("click", () => {
+      if (!isPremium(currentUser)) {
+        closeLootModal();
+        openPremiumModal();
+        return;
+      }
+      if (currentDirectUrl) window.location.href = currentDirectUrl;
+    });
+  }
+  if (btnBuyPremium) {
+    btnBuyPremium.addEventListener("click", () => {
+      closeLootModal();
+      openPremiumModal();
+    });
+  }
+
+  function openPremiumModal() {
     if (premiumModal) premiumModal.hidden = false;
+    if (lootOverlay) lootOverlay.hidden = false;
     if (premiumMsg) premiumMsg.textContent = "";
     document.body.style.overflow = "hidden";
   }
-  function closePremium() {
-    if (premiumOverlay) premiumOverlay.hidden = true;
+  function closePremiumModal() {
     if (premiumModal) premiumModal.hidden = true;
-    if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
+    if (lootOverlay && lootModal && lootModal.hidden && authModal && authModal.hidden) {
+      lootOverlay.hidden = true;
+      if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
+    }
   }
-  if (premiumClose) premiumClose.addEventListener("click", closePremium);
-  if (premiumOverlay) premiumOverlay.addEventListener("click", closePremium);
-  if (lootPremium) lootPremium.addEventListener("click", (e) => { e.preventDefault(); closeLoot(); openPremium(); });
+  if (premiumClose) premiumClose.addEventListener("click", closePremiumModal);
 
-  // Real Whop checkout URLs (LEMODZ company biz_3MqDjHrWDdPdH4)
   const WHOP_CHECKOUT = {
     day: "https://whop.com/checkout/ch_yNDF6JY0TS1O2jl/",
     week: "https://whop.com/checkout/ch_F2KB7UiJcMZEiSi/",
@@ -299,23 +312,20 @@
       const days = parseInt(card.dataset.days || "0", 10);
       if (!currentUser) {
         if (premiumMsg) premiumMsg.textContent = "Please Sign In or Sign Up first.";
-        closePremium();
-        openAuth("signup");
+        closePremiumModal();
+        openAuthModal("signup");
         return;
       }
-      const checkoutUrl = WHOP_CHECKOUT[plan];
-      if (checkoutUrl) {
-        window.open(checkoutUrl, "_blank", "noopener,noreferrer");
-        if (premiumMsg) {
-          premiumMsg.textContent =
-            "Complete payment on Whop. Then return and refresh — or contact support to activate.";
-        }
+      const url = WHOP_CHECKOUT[plan];
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        if (premiumMsg) premiumMsg.textContent = "Complete payment on Whop, then return and Sign In.";
         return;
       }
       const until = Date.now() + days * 24 * 60 * 60 * 1000;
       currentUser.isPremium = true;
       currentUser.premiumUntil = until;
-      saveAccount(currentUser);
+      setSession(currentUser);
       const users = getUsers();
       if (users[currentUser.email]) {
         users[currentUser.email].isPremium = true;
@@ -324,14 +334,14 @@
       }
       if (premiumMsg) premiumMsg.textContent = "Premium activated (demo).";
       refreshAuthUI();
-      setTimeout(closePremium, 1000);
+      setTimeout(closePremiumModal, 900);
     });
   });
 
   function closeAllModals() {
-    closeAuth();
-    closeLoot();
-    closePremium();
+    closeAuthModal();
+    closeLootModal();
+    closePremiumModal();
   }
 
   document.addEventListener("keydown", (e) => {
