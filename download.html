@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEMODZ — Downloading…</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    .dl-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      text-align: center;
+    }
+    .dl-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+    .dl-spinner {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1.25rem;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .dl-title {
+      font-family: var(--pixel);
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      margin-bottom: 0.75rem;
+      color: var(--accent);
+    }
+    .dl-file {
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      word-break: break-all;
+    }
+    .dl-status {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    .dl-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .dl-actions .btn {
+      width: 100%;
+    }
+    .dl-error .dl-title { color: var(--danger); }
+    .dl-done .dl-spinner { display: none; }
+  </style>
+</head>
+<body>
+  <div class="dl-page">
+    <div class="dl-card" id="dl-card">
+      <div class="dl-spinner" id="dl-spinner"></div>
+      <h1 class="dl-title" id="dl-title">Preparing download</h1>
+      <p class="dl-file" id="dl-file">…</p>
+      <p class="dl-status" id="dl-status">Please wait a moment…</p>
+      <div class="dl-actions">
+        <a class="btn btn-download" id="dl-manual" href="#" style="display:none">Download again</a>
+        <a class="btn btn-outline" href="main.html">Back to Home</a>
+      </div>
+    </div>
+  </div>
+  <script>
+(function () {
+  var ALLOWED = {
+    "LEAdminAbuse-v1.1.0.mcaddon": true,
+    "LEAdminAbuse_V1.1.0_Guide.xlsx": true,
+    "LEAdminAbuse-v1.0.2.mcaddon": true,
+    "LEAdminAbuse_V1.0.2_Guide.xlsx": true,
+    "LEAdminAbuse-v1.0.1.mcaddon": true,
+    "LEAdminAbuse_V1.0.1_Guide.xlsx": true,
+    "LEAdminAbuse-v1.0.0.mcaddon": true,
+    "LEAdminAbuse_V1.0.0_Guide.xlsx": true,
+    "LECommands.mcaddon": true,
+    "Commands_A1_v1.0.0.mcaddon": true,
+    "Commands_A1_v1.0.0_Guide.xlsx": true,
+    "Commands_A1_v1.0.1.mcaddon": true,
+    "Commands_A1_v1.0.1_Guide.xlsx": true
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  var file = params.get("file") || "";
+  var card = document.getElementById("dl-card");
+  var title = document.getElementById("dl-title");
+  var fileEl = document.getElementById("dl-file");
+  var status = document.getElementById("dl-status");
+  var manual = document.getElementById("dl-manual");
+
+  fileEl.textContent = file || "(no file)";
+
+  if (!file || !ALLOWED[file]) {
+    card.classList.add("dl-error");
+    title.textContent = "Invalid file";
+    status.textContent = "This download link is not valid. Go back and try again.";
+    document.getElementById("dl-spinner").style.display = "none";
+    return;
+  }
+
+  var href = "downloads/" + encodeURIComponent(file);
+
+  function startDownload() {
+    var a = document.createElement("a");
+    a.href = href;
+    a.download = file;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    card.classList.add("dl-done");
+    title.textContent = "Download started";
+    status.textContent = "Check your browser downloads. If nothing started, use the button below.";
+    manual.href = href;
+    manual.setAttribute("download", file);
+    manual.style.display = "inline-flex";
+  }
+
+  setTimeout(startDownload, 900);
+})();
+  </script>
+</body>
+</html>
