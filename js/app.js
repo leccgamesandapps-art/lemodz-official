@@ -201,7 +201,7 @@
     formSignin.addEventListener("submit", (e) => {
       e.preventDefault();
       const email = (document.getElementById("signin-email") || {}).value || "";
-      const password = (document.getElementById("signin-password") || {}).value || "";
+      const password = (document.getElementById("signin-pass") || {}).value || "";
       const msg = document.getElementById("signin-msg");
       const users = getUsers();
       const key = email.trim().toLowerCase();
@@ -223,7 +223,7 @@
       e.preventDefault();
       const name = (document.getElementById("signup-name") || {}).value || "";
       const email = (document.getElementById("signup-email") || {}).value || "";
-      const password = (document.getElementById("signup-password") || {}).value || "";
+      const password = (document.getElementById("signup-pass") || {}).value || "";
       const msg = document.getElementById("signup-msg");
       const key = email.trim().toLowerCase();
       const users = getUsers();
