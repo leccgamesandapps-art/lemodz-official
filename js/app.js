@@ -217,8 +217,14 @@
     document.querySelectorAll(".auth-tab").forEach(function (t) {
       t.classList.toggle("active", t.dataset.tab === tab);
     });
-    if (formSignin) formSignin.hidden = tab !== "signin";
-    if (formSignup) formSignup.hidden = tab !== "signup";
+    if (formSignin) {
+      formSignin.hidden = tab !== "signin";
+      formSignin.style.display = tab === "signin" ? "flex" : "none";
+    }
+    if (formSignup) {
+      formSignup.hidden = tab !== "signup";
+      formSignup.style.display = tab === "signup" ? "flex" : "none";
+    }
     var sm = document.getElementById("signin-msg");
     var um = document.getElementById("signup-msg");
     if (sm) { sm.textContent = ""; sm.classList.remove("error"); }
