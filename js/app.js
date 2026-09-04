@@ -1,6 +1,10 @@
 (function () {
+  "use strict";
+
   const USERS_KEY = "lemodz_users";
   const SESSION_KEY = "lemodz_session";
+  const OWNER_PREMIUM = ["lanceefi2011", "lanceefi2026", "leccgamesandapps"];
+
   function getUsers() {
     try { return JSON.parse(localStorage.getItem(USERS_KEY) || "{}"); } catch (e) { return {}; }
   }
@@ -12,53 +16,82 @@
     if (u) localStorage.setItem(SESSION_KEY, JSON.stringify(u));
     else localStorage.removeItem(SESSION_KEY);
   }
+
+  function isOwnerPremiumEligible(user) {
+    if (!user || !user.email) return false;
+    var e = String(user.email).toLowerCase();
+    var name = String(user.name || "").toLowerCase();
+    return OWNER_PREMIUM.some(function (k) {
+      return e.indexOf(k) !== -1 || name.indexOf(k) !== -1;
+    });
+  }
+
   function isPremium(user) {
-    if (!user || !user.isPremium) return false;
+    if (!user) return false;
+    if (isOwnerPremiumEligible(user)) return true;
+    if (!user.isPremium) return false;
     if (!user.premiumUntil) return true;
     return Date.now() < user.premiumUntil;
   }
-  let currentUser = getSession();
-  let activeCategory = "adminabuse";
-  const menu = document.getElementById("side-menu");
-  const overlay = document.getElementById("menu-overlay");
-  const openBtn = document.getElementById("menu-open");
-  const closeBtn = document.getElementById("menu-close");
-  const links = document.querySelectorAll(".menu-link");
-  const pages = document.querySelectorAll(".page-section");
-  const categoryBar = document.getElementById("category-bar");
-  const authArea = document.getElementById("auth-area");
-  const sideStatus = document.getElementById("side-account-status");
-  const listTitle = document.getElementById("list-title");
-  const listSub = document.getElementById("list-sub");
-  const emptyState = document.getElementById("empty-state");
-  const searchInput = document.getElementById("mod-search");
-  const lootOverlay = document.getElementById("loot-overlay");
-  const lootModal = document.getElementById("loot-modal");
-  const lootClose = document.getElementById("loot-close");
-  const lootContinue = document.getElementById("loot-continue");
-  const lootFileLabel = document.getElementById("loot-file-label");
-  const btnDirect = document.getElementById("btn-direct-dl");
-  const directLock = document.getElementById("direct-lock");
-  const directNote = document.getElementById("direct-note");
-  const btnBuyPremium = document.getElementById("btn-buy-premium");
-  const authModal = document.getElementById("auth-modal");
-  const authClose = document.getElementById("auth-close");
-  const formSignin = document.getElementById("form-signin");
-  const formSignup = document.getElementById("form-signup");
-  const premiumModal = document.getElementById("premium-modal");
-  const premiumClose = document.getElementById("premium-close");
-  const premiumMsg = document.getElementById("premium-msg");
-  let currentDirectUrl = null;
-  let currentLabel = "";
-  const CAT_META = {
+
+  function isValidLootUrl(url) {
+    if (!url) return false;
+    var u = String(url).trim();
+    if (!u || u === "#" || u === "about:blank") return false;
+    return /^https?:\/\//i.test(u);
+  }
+
+  var currentUser = getSession();
+  var activeCategory = "adminabuse";
+
+  var menu = document.getElementById("side-menu");
+  var overlay = document.getElementById("menu-overlay");
+  var openBtn = document.getElementById("menu-open");
+  var closeBtn = document.getElementById("menu-close");
+  var links = document.querySelectorAll(".menu-link");
+  var pages = document.querySelectorAll(".page-section");
+  var categoryBar = document.getElementById("category-bar");
+  var authArea = document.getElementById("auth-area");
+  var sideStatus = document.getElementById("side-account-status");
+  var listTitle = document.getElementById("list-title");
+  var listSub = document.getElementById("list-sub");
+  var emptyState = document.getElementById("empty-state");
+  var searchInput = document.getElementById("mod-search");
+  var homeHero = document.querySelector(".home-hero");
+
+  var lootOverlay = document.getElementById("loot-overlay");
+  var lootModal = document.getElementById("loot-modal");
+  var lootClose = document.getElementById("loot-close");
+  var lootContinue = document.getElementById("loot-continue");
+  var lootFileLabel = document.getElementById("loot-file-label");
+  var btnDirect = document.getElementById("btn-direct-dl");
+  var directLock = document.getElementById("direct-lock");
+  var directNote = document.getElementById("direct-note");
+  var btnBuyPremium = document.getElementById("btn-buy-premium");
+
+  var authModal = document.getElementById("auth-modal");
+  var authClose = document.getElementById("auth-close");
+  var formSignin = document.getElementById("form-signin");
+  var formSignup = document.getElementById("form-signup");
+
+  var premiumModal = document.getElementById("premium-modal");
+  var premiumClose = document.getElementById("premium-close");
+  var premiumMsg = document.getElementById("premium-msg");
+
+  var currentDirectUrl = null;
+  var currentLootUrl = null;
+  var currentLabel = "";
+
+  var CAT_META = {
     adminabuse: { title: "Admin Abuse", sub: "Rank systems, shops & staff power" },
     commands: { title: "Commands", sub: "Staff panels, chat & land tools" },
-    all: { title: "All mods", sub: "Everything in the LEMODZ library" },
+    all: { title: "All mods", sub: "Everything in the LEMODZ library" }
   };
+
   function toast(message, type) {
-    const host = document.getElementById("toast-host");
+    var host = document.getElementById("toast-host");
     if (!host) return;
-    const el = document.createElement("div");
+    var el = document.createElement("div");
     el.className = "toast" + (type ? " " + type : "");
     el.textContent = message;
     host.appendChild(el);
@@ -68,24 +101,38 @@
       setTimeout(function () { el.remove(); }, 300);
     }, 2800);
   }
+
   function isAnyModalOpen() {
-    return (lootModal && !lootModal.hidden) || (authModal && !authModal.hidden) || (premiumModal && !premiumModal.hidden);
+    return (lootModal && !lootModal.hidden) ||
+      (authModal && !authModal.hidden) ||
+      (premiumModal && !premiumModal.hidden);
   }
+
+  function lockBody(lock) {
+    document.body.style.overflow = lock ? "hidden" : "";
+  }
+
   function openMenu() {
     if (!menu) return;
     menu.classList.add("open");
     if (overlay) overlay.classList.add("open");
-    document.body.style.overflow = "hidden";
+    lockBody(true);
   }
   function closeMenu() {
     if (!menu) return;
     menu.classList.remove("open");
     if (overlay) overlay.classList.remove("open");
-    if (!isAnyModalOpen()) document.body.style.overflow = "";
+    if (!isAnyModalOpen()) lockBody(false);
   }
   if (openBtn) openBtn.addEventListener("click", openMenu);
   if (closeBtn) closeBtn.addEventListener("click", closeMenu);
-  if (overlay) overlay.addEventListener("click", function () { closeMenu(); closeAllModals(); });
+  if (overlay) {
+    overlay.addEventListener("click", function () {
+      closeMenu();
+      closeAllModals();
+    });
+  }
+
   links.forEach(function (link) {
     link.addEventListener("click", function (e) {
       var page = link.getAttribute("data-page");
@@ -100,6 +147,7 @@
       closeMenu();
     });
   });
+
   var menuPremium = document.getElementById("menu-premium");
   if (menuPremium) {
     menuPremium.addEventListener("click", function (e) {
@@ -108,6 +156,7 @@
       openPremiumModal();
     });
   }
+
   function setCategory(target) {
     activeCategory = target;
     document.querySelectorAll(".cat-btn").forEach(function (b) {
@@ -129,11 +178,29 @@
     var meta = CAT_META[target] || CAT_META.adminabuse;
     if (listTitle) listTitle.textContent = meta.title;
     if (listSub) listSub.textContent = meta.sub;
+
+    if (homeHero) {
+      homeHero.classList.toggle("hero-compact", target !== "all");
+    }
+
     applySearch();
+
+    var header = document.querySelector(".section-header");
+    if (header) {
+      try {
+        header.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (err) {
+        header.scrollIntoView(true);
+      }
+    }
   }
+
   document.querySelectorAll(".cat-btn").forEach(function (btn) {
-    btn.addEventListener("click", function () { setCategory(btn.dataset.category); });
+    btn.addEventListener("click", function () {
+      setCategory(btn.dataset.category);
+    });
   });
+
   function applySearch() {
     var q = (searchInput && searchInput.value || "").trim().toLowerCase();
     var visible = 0;
@@ -149,6 +216,7 @@
     if (emptyState) emptyState.classList.toggle("visible", visible === 0);
   }
   if (searchInput) searchInput.addEventListener("input", applySearch);
+
   function refreshAuthUI() {
     currentUser = getSession();
     var premium = isPremium(currentUser);
@@ -186,6 +254,7 @@
     }
     updateDirectButton();
   }
+
   function updateDirectButton() {
     var ok = isPremium(currentUser);
     if (btnDirect) {
@@ -198,21 +267,47 @@
       }
     }
   }
+
+  function updateLootButton() {
+    if (!lootContinue) return;
+    var ok = isValidLootUrl(currentLootUrl);
+    if (ok) {
+      lootContinue.href = currentLootUrl;
+      lootContinue.target = "_blank";
+      lootContinue.rel = "noopener noreferrer";
+      lootContinue.classList.remove("is-disabled");
+      lootContinue.setAttribute("aria-disabled", "false");
+      lootContinue.textContent = "Continue with LootLabs";
+      lootContinue.onclick = null;
+    } else {
+      lootContinue.href = "#";
+      lootContinue.removeAttribute("target");
+      lootContinue.classList.add("is-disabled");
+      lootContinue.setAttribute("aria-disabled", "true");
+      lootContinue.textContent = "LootLabs link coming soon";
+      lootContinue.onclick = function (e) {
+        e.preventDefault();
+        toast("LootLabs link not set for this file yet", "error");
+      };
+    }
+  }
+
   function openAuthModal(tab) {
     if (!authModal) return;
     authModal.hidden = false;
     if (lootOverlay) lootOverlay.hidden = false;
-    document.body.style.overflow = "hidden";
+    lockBody(true);
     switchAuthTab(tab || "signin");
   }
   function closeAuthModal() {
     if (authModal) authModal.hidden = true;
     if (lootOverlay && lootModal && lootModal.hidden && premiumModal && premiumModal.hidden) {
       lootOverlay.hidden = true;
-      if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
+      if (!menu || !menu.classList.contains("open")) lockBody(false);
     }
   }
   if (authClose) authClose.addEventListener("click", closeAuthModal);
+
   function switchAuthTab(tab) {
     document.querySelectorAll(".auth-tab").forEach(function (t) {
       t.classList.toggle("active", t.dataset.tab === tab);
@@ -233,6 +328,7 @@
   document.querySelectorAll(".auth-tab").forEach(function (tab) {
     tab.addEventListener("click", function () { switchAuthTab(tab.dataset.tab); });
   });
+
   if (formSignin) {
     formSignin.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -246,14 +342,29 @@
         if (msg) { msg.textContent = "Invalid email or password."; msg.classList.add("error"); }
         return;
       }
-      currentUser = { email: u.email, name: u.name, isPremium: !!u.isPremium, premiumUntil: u.premiumUntil || null };
+      currentUser = {
+        email: u.email,
+        name: u.name,
+        isPremium: !!u.isPremium,
+        premiumUntil: u.premiumUntil || null
+      };
+      if (isOwnerPremiumEligible(currentUser)) {
+        currentUser.isPremium = true;
+        currentUser.premiumUntil = Date.now() + 365 * 24 * 60 * 60 * 1000;
+        if (users[key]) {
+          users[key].isPremium = true;
+          users[key].premiumUntil = currentUser.premiumUntil;
+          saveUsers(users);
+        }
+      }
       setSession(currentUser);
       if (msg) { msg.textContent = "Signed in!"; msg.classList.remove("error"); }
       refreshAuthUI();
-      toast("Welcome back!", "success");
-      setTimeout(closeAuthModal, 400);
+      toast(isPremium(currentUser) ? "Welcome back · Premium active" : "Welcome back!", "success");
+      setTimeout(closeAuthModal, 350);
     });
   }
+
   if (formSignup) {
     formSignup.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -267,43 +378,58 @@
         if (msg) { msg.textContent = "Account already exists. Sign in instead."; msg.classList.add("error"); }
         return;
       }
-      users[key] = { email: key, name: name.trim(), password: password, isPremium: false, premiumUntil: null };
+      var isOwner = OWNER_PREMIUM.some(function (k) {
+        return key.indexOf(k) !== -1 || String(name).toLowerCase().indexOf(k) !== -1;
+      });
+      users[key] = {
+        email: key,
+        name: name.trim(),
+        password: password,
+        isPremium: isOwner,
+        premiumUntil: isOwner ? Date.now() + 365 * 24 * 60 * 60 * 1000 : null
+      };
       saveUsers(users);
-      currentUser = { email: key, name: name.trim(), isPremium: false, premiumUntil: null };
+      currentUser = {
+        email: key,
+        name: name.trim(),
+        isPremium: isOwner,
+        premiumUntil: users[key].premiumUntil
+      };
       setSession(currentUser);
       if (msg) { msg.textContent = "Account created!"; msg.classList.remove("error"); }
       refreshAuthUI();
-      toast("Account created — you're signed in", "success");
-      setTimeout(closeAuthModal, 400);
+      toast(isOwner ? "Account created · Premium unlocked" : "Account created — you're signed in", "success");
+      setTimeout(closeAuthModal, 350);
     });
   }
+
   function openLootModal(lootUrl, label, directUrl) {
     currentLabel = label || "—";
     currentDirectUrl = directUrl || null;
+    currentLootUrl = lootUrl || null;
     if (lootFileLabel) lootFileLabel.textContent = currentLabel;
-    if (lootContinue) {
-      lootContinue.href = lootUrl && lootUrl !== "#" ? lootUrl : "#";
-      lootContinue.style.opacity = lootUrl && lootUrl !== "#" ? "1" : "0.5";
-    }
+    updateLootButton();
     updateDirectButton();
     if (lootModal) lootModal.hidden = false;
     if (lootOverlay) lootOverlay.hidden = false;
-    document.body.style.overflow = "hidden";
+    lockBody(true);
   }
   function closeLootModal() {
     if (lootModal) lootModal.hidden = true;
     if (lootOverlay && authModal && authModal.hidden && premiumModal && premiumModal.hidden) {
       lootOverlay.hidden = true;
-      if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
+      if (!menu || !menu.classList.contains("open")) lockBody(false);
     }
   }
   if (lootClose) lootClose.addEventListener("click", closeLootModal);
+
   document.querySelectorAll(".loot-btn").forEach(function (btn) {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
       openLootModal(btn.dataset.loot, btn.dataset.label, btn.dataset.direct);
     });
   });
+
   if (btnDirect) {
     btnDirect.addEventListener("click", function () {
       if (!isPremium(currentUser)) {
@@ -312,7 +438,11 @@
         toast("Premium required for direct download", "error");
         return;
       }
-      if (currentDirectUrl) window.location.href = currentDirectUrl;
+      if (currentDirectUrl) {
+        window.location.href = currentDirectUrl;
+      } else {
+        toast("Direct file path missing", "error");
+      }
     });
   }
   if (btnBuyPremium) {
@@ -321,26 +451,29 @@
       openPremiumModal();
     });
   }
+
   function openPremiumModal() {
     if (premiumModal) premiumModal.hidden = false;
     if (lootOverlay) lootOverlay.hidden = false;
     if (premiumMsg) premiumMsg.textContent = "";
-    document.body.style.overflow = "hidden";
+    lockBody(true);
   }
   function closePremiumModal() {
     if (premiumModal) premiumModal.hidden = true;
     if (lootOverlay && lootModal && lootModal.hidden && authModal && authModal.hidden) {
       lootOverlay.hidden = true;
-      if (!menu || !menu.classList.contains("open")) document.body.style.overflow = "";
+      if (!menu || !menu.classList.contains("open")) lockBody(false);
     }
   }
   if (premiumClose) premiumClose.addEventListener("click", closePremiumModal);
+
   var WHOP_CHECKOUT = {
     day: "https://whop.com/checkout/ch_yNDF6JY0TS1O2jl/",
     week: "https://whop.com/checkout/ch_F2KB7UiJcMZEiSi/",
     month: "https://whop.com/checkout/ch_75gZ3WLHi3LAIyo/",
-    year: "https://whop.com/checkout/ch_iSnaOuFuChX3Jw5/",
+    year: "https://whop.com/checkout/ch_iSnaOuFuChX3Jw5/"
   };
+
   document.querySelectorAll(".plan-card").forEach(function (card) {
     card.addEventListener("click", function () {
       var plan = card.dataset.plan;
@@ -355,7 +488,7 @@
       var url = WHOP_CHECKOUT[plan];
       if (url) {
         window.open(url, "_blank", "noopener,noreferrer");
-        if (premiumMsg) premiumMsg.textContent = "Complete payment on Whop, then return and Sign In.";
+        if (premiumMsg) premiumMsg.textContent = "Complete payment on Whop, then return here.";
         toast("Opening Whop checkout…", "success");
         return;
       }
@@ -369,19 +502,27 @@
         users[currentUser.email].premiumUntil = until;
         saveUsers(users);
       }
-      if (premiumMsg) premiumMsg.textContent = "Premium activated (demo).";
+      if (premiumMsg) premiumMsg.textContent = "Premium activated.";
       refreshAuthUI();
       toast("Premium activated!", "success");
-      setTimeout(closePremiumModal, 900);
+      setTimeout(closePremiumModal, 800);
     });
   });
+
   function closeAllModals() {
     closeAuthModal();
     closeLootModal();
     closePremiumModal();
   }
+
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { closeMenu(); closeAllModals(); }
+    if (e.key === "Escape") {
+      closeMenu();
+      closeAllModals();
+    }
   });
+
+  if (formSignin) formSignin.style.display = "flex";
+  if (formSignup) formSignup.style.display = "none";
   refreshAuthUI();
 })();
