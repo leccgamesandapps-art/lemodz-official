@@ -10,6 +10,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style id="lemodz-v3">
+    [hidden],.auth-form[hidden],form[hidden],.loot-modal[hidden],.loot-overlay[hidden],.mod-category[hidden]{display:none!important}
+    .home-hero.hero-compact{padding:.85rem 1.1rem;margin-bottom:1rem}
+    .home-hero.hero-compact h2{font-size:1.05rem;max-width:none;margin-bottom:.25rem}
+    .home-hero.hero-compact p{display:none}
+    .home-hero.hero-compact .hero-stats{gap:.4rem}
+    .home-hero.hero-compact .stat-pill{font-size:.72rem;padding:.28rem .6rem}
+    a.btn.is-disabled,.btn.is-disabled,#loot-continue.is-disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35);box-shadow:none!important}
+    .section-header{scroll-margin-top:calc(var(--header-h) + 72px)}
+    .auth-chip.premium{animation:premiumGlow 2.4s ease-in-out infinite}
+    @keyframes premiumGlow{0%,100%{box-shadow:0 0 12px rgba(240,193,75,.12)}50%{box-shadow:0 0 22px rgba(240,193,75,.28)}}
+    @media(max-width:640px){
+      .toolbar{gap:.55rem;padding:.65rem .85rem}
+      .home-hero{padding:1.15rem 1rem}
+      .home-hero h2{font-size:1.2rem}
+      .mod-card{padding:1.05rem}
+      .loot-modal{width:min(100vw - 1rem,420px);max-height:85vh;padding:1.35rem 1.15rem 1.25rem}
+      .auth-chip{max-width:120px}
+    }
+  </style>
 </head>
 <body>
   <div id="menu-overlay" class="menu-overlay"></div>
@@ -51,7 +71,7 @@
     <section id="page-home" class="page-section active">
       <div class="home-hero">
         <p class="hero-eyebrow">Official library</p>
-        <h2>Minecraft Bedrock mods built for servers & creators</h2>
+        <h2>Minecraft Bedrock mods built for servers &amp; creators</h2>
         <p>Admin tools, command packs, and guides — download free via LootLabs or go Premium for instant direct downloads.</p>
         <div class="hero-stats">
           <span class="stat-pill"><strong>7</strong> mods</span>
@@ -62,7 +82,7 @@
       <div class="section-header">
         <div>
           <h2 id="list-title">Admin Abuse</h2>
-          <p class="section-sub" id="list-sub">Rank systems, shops & staff power</p>
+          <p class="section-sub" id="list-sub">Rank systems, shops &amp; staff power</p>
         </div>
       </div>
       <div class="empty-state" id="empty-state">
@@ -176,8 +196,8 @@
         </div>
       </div>
       <div class="about-grid">
-        <div class="about-card"><h3>Owner</h3><p>Lanceefi2011 (Minecraft GameTag)<br />Creator of Admin Abuse & Commands packs.</p></div>
-        <div class="about-card"><h3>Developer AI</h3><p>Grok AI — helps design, code, and ship the official LEMODZ website & tools.</p></div>
+        <div class="about-card"><h3>Owner</h3><p>Lanceefi2011 (Minecraft GameTag)<br />Creator of Admin Abuse &amp; Commands packs.</p></div>
+        <div class="about-card"><h3>Developer AI</h3><p>Grok AI — helps design, code, and ship the official LEMODZ website &amp; tools.</p></div>
         <div class="about-card"><h3>Platform</h3><p>Minecraft Bedrock Edition (1.21+). Family-friendly content only.</p></div>
         <div class="about-card"><h3>Premium</h3><p>Unlock instant direct downloads. Plans from ₱49/day to ₱599/year via Whop.</p></div>
       </div>
