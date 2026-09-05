@@ -35,6 +35,17 @@
     .code-input{flex:1;min-width:0;padding:.65rem .8rem;border-radius:10px;border:1px solid var(--border,rgba(255,255,255,.12));background:rgba(0,0,0,.25);color:var(--text,#e8eef7);font-size:.9rem}
     .code-input:focus{outline:none;border-color:var(--accent,#3dd68c);box-shadow:0 0 0 2px rgba(61,214,140,.2)}
     .code-btn{flex-shrink:0;padding:.65rem 1rem;white-space:nowrap}
+    .premium-title-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem .75rem;margin-bottom:.35rem}
+    .premium-title-row .loot-title{margin:0;flex:1;min-width:140px}
+    .premium-countdown{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .65rem;border-radius:999px;background:rgba(61,214,140,.12);border:1px solid rgba(61,214,140,.35);font-size:.72rem;font-weight:700;color:#3dd68c;white-space:nowrap}
+    .premium-countdown .cd-label{opacity:.85;font-weight:600}
+    .premium-countdown .cd-time{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+    .premium-lock-note{margin:.5rem 0 0;font-size:.8rem;color:#f0c14b;font-weight:600}
+    .premium-plans.is-locked{opacity:.55;pointer-events:none;filter:grayscale(.25)}
+    .premium-plans.is-locked .plan-card{cursor:not-allowed}
+    .code-redeem.is-locked{opacity:.55}
+    .code-redeem.is-locked .code-input,
+    .code-redeem.is-locked .code-btn{pointer-events:none;cursor:not-allowed}
   </style>
 </head>
 <body>
@@ -259,8 +270,12 @@
   <div id="premium-modal" class="loot-modal premium-modal" role="dialog" aria-modal="true" hidden>
     <button type="button" class="loot-close" id="premium-close" aria-label="Close">✕</button>
     <p class="loot-eyebrow">LEMODZ Premium</p>
-    <h2 class="loot-title">Unlock Free to Download</h2>
+    <div class="premium-title-row">
+      <h2 class="loot-title">Unlock Free to Download</h2>
+      <div id="premium-countdown" class="premium-countdown" hidden></div>
+    </div>
     <p class="loot-note">Skip LootLabs steps. Instant direct downloads while Premium is active.</p>
+    <p id="premium-lock-note" class="premium-lock-note" hidden></p>
     <div class="premium-plans">
       <button type="button" class="plan-card" data-plan="day" data-days="1" data-price="49">
         <span class="plan-name">1 Day</span><span class="plan-price">₱49</span><span class="plan-per">per day</span>
@@ -285,6 +300,7 @@
     </div>
     <p class="auth-msg" id="premium-msg"></p>
   </div>
+  <script src="js/premium.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
