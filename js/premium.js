@@ -244,20 +244,20 @@
             return;
           }
           var plan = card.dataset.plan;
-          var days = parseInt(card.dataset.days || "0", 10);
+          // Buy ONLY opens Whop checkout — never grant Premium here.
+          // Premium is granted after successful payment (webhook / return)
+          // or via redeem code. Cancelled checkout = no Premium.
           if (openWhopCheckout(plan)) {
-            setMsg("Complete payment on Whop, then return here.");
+            setMsg("Finish payment on Whop to unlock Premium. Closing checkout does not activate Premium.");
             if (typeof opts.onToast === "function") {
-              opts.onToast("Opening Whop checkout…", "success");
+              opts.onToast("Complete payment on Whop to unlock Premium", "success");
             }
             return;
           }
-          activatePremiumDays(user, days);
-          setMsg("Premium activated.");
+          setMsg("Checkout unavailable for this plan. Try again later.", true);
           if (typeof opts.onToast === "function") {
-            opts.onToast("Premium activated!", "success");
+            opts.onToast("Checkout unavailable", "error");
           }
-          tick();
         });
       });
     }
