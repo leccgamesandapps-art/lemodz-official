@@ -3,90 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LEMODZ — Complete Ad Tasks</title>
+  <title>LEMODZ — Ad Tasks</title>
   <meta name="theme-color" content="#070b10" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    .ad-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem 1rem 2rem}
-    .ad-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem 1.25rem 1.35rem;max-width:460px;width:100%;box-shadow:var(--shadow)}
-    .ad-eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:0 0 .4rem}
-    .ad-title{font-family:var(--pixel);font-size:.62rem;line-height:1.55;letter-spacing:1px;color:var(--accent);margin:0 0 .65rem}
-    .ad-file{font-weight:600;font-size:.9rem;color:var(--text);margin:0 0 1rem;word-break:break-all}
-    .progress-wrap{margin-bottom:1rem}
-    .progress-meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;font-weight:600}
-    .progress-bar{height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
-    .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#3dd68c,#2bb673);border-radius:999px;transition:width .35s ease}
-    .task-list{display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.15rem}
-    .task-item{border:1px solid var(--border);border-radius:12px;padding:.85rem .9rem;background:rgba(0,0,0,.22);transition:border-color .2s,opacity .2s}
-    .task-item.done{border-color:rgba(61,214,140,.45);background:rgba(61,214,140,.08)}
-    .task-item.locked{opacity:.42;pointer-events:none}
-    .task-item.active{border-color:rgba(61,214,140,.55);box-shadow:0 0 0 1px rgba(61,214,140,.15)}
-    .task-head{display:flex;align-items:flex-start;gap:.55rem;margin-bottom:.55rem}
-    .task-num{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text-muted);font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .task-item.done .task-num,.task-item.active .task-num{background:rgba(61,214,140,.25);color:#3dd68c}
-    .task-title{font-size:.88rem;font-weight:700;color:var(--text);margin:0;line-height:1.35}
-    .task-desc{font-size:.78rem;color:var(--text-muted);margin:.15rem 0 0;line-height:1.4}
-    .task-body{padding-left:1.9rem}
-    .task-body .btn{width:100%;margin-top:.4rem}
-    .ad-offer-name{font-size:.82rem;font-weight:700;color:#f0c14b;margin:0 0 .25rem}
-    .timer-box{text-align:center;margin:.5rem 0 .15rem;padding:.65rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08)}
-    .timer-label{font-size:.72rem;color:var(--text-muted);margin:0 0 .2rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-    .timer-value{font-size:1.75rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:.03em}
-    .timer-value.done{color:#f0c14b;font-size:1.1rem}
-    .timer-hint{font-size:.75rem;color:var(--text-muted);margin:.25rem 0 0}
-    .status-msg{font-size:.78rem;color:var(--text-muted);margin:.35rem 0 0;text-align:center}
-    .status-msg.warn{color:#f0c14b}
-    .status-msg.ok{color:#3dd68c;font-weight:700}
-    .ad-actions{display:flex;flex-direction:column;gap:.6rem}
-    .ad-actions .btn{width:100%}
-    .ad-actions .btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
-    .ad-note{margin:.85rem 0 0;font-size:.76rem;color:var(--text-muted);text-align:center}
-    .done-banner{display:none;text-align:center;padding:.65rem;margin-bottom:.85rem;border-radius:10px;background:rgba(61,214,140,.12);border:1px solid rgba(61,214,140,.35);color:#3dd68c;font-weight:700;font-size:.88rem}
-    .done-banner.show{display:block}
+    :root { --card-w: min(100vw - 1.5rem, 420px); }
+    body { margin: 0; min-height: 100vh; background: var(--bg, #070b10); overflow-x: hidden; }
+    .ad-stage { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.25rem 0.85rem 1.75rem; position: relative; }
+    .ad-backdrop { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(61,214,140,0.08), transparent 55%), rgba(0,0,0,0.55); pointer-events: none; z-index: 0; }
+    .card-stack { position: relative; width: var(--card-w); z-index: 1; min-height: 420px; }
+    .pop-card { position: absolute; inset: 0 auto auto 0; width: 100%; background: var(--bg-card, #101820); border: 1px solid var(--border, rgba(255,255,255,0.1)); border-radius: 18px; padding: 1.45rem 1.25rem 1.3rem; box-shadow: 0 20px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03); opacity: 0; transform: translateY(28px) scale(0.94); pointer-events: none; transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); will-change: opacity, transform; }
+    .pop-card.is-active { position: relative; opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; z-index: 2; }
+    .pop-card.is-exit { opacity: 0; transform: translateY(-22px) scale(0.96); pointer-events: none; z-index: 1; }
+    .pop-card.is-enter-prep { opacity: 0; transform: translateY(28px) scale(0.94); }
+    .step-dots { display: flex; justify-content: center; gap: 0.4rem; margin-bottom: 1rem; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 0.3s, transform 0.3s; }
+    .step-dot.on { background: #3dd68c; transform: scale(1.2); }
+    .step-dot.done { background: rgba(61,214,140,0.45); }
+    .card-eyebrow { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, #9aa4b2); margin: 0 0 0.35rem; text-align: center; }
+    .card-title { font-family: var(--pixel, "Press Start 2P", monospace); font-size: 0.58rem; line-height: 1.55; letter-spacing: 1px; color: var(--accent, #3dd68c); margin: 0 0 0.55rem; text-align: center; }
+    .card-file { font-weight: 600; font-size: 0.86rem; color: var(--text, #e8eef7); margin: 0 0 1rem; text-align: center; word-break: break-all; }
+    .offer-badge { display: inline-block; font-size: 0.78rem; font-weight: 700; color: #f0c14b; background: rgba(240,193,75,0.1); border: 1px solid rgba(240,193,75,0.28); padding: 0.3rem 0.65rem; border-radius: 999px; margin: 0 auto 0.85rem; }
+    .offer-wrap { text-align: center; }
+    .timer-box { text-align: center; margin: 0.75rem 0; padding: 0.85rem; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); }
+    .timer-label { font-size: 0.7rem; color: var(--text-muted, #9aa4b2); margin: 0 0 0.2rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .timer-value { font-size: 2rem; font-weight: 800; color: #3dd68c; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.2; }
+    .timer-value.ready { color: #f0c14b; font-size: 1.2rem; }
+    .timer-hint { font-size: 0.74rem; color: var(--text-muted, #9aa4b2); margin: 0.3rem 0 0; }
+    .status-msg { font-size: 0.8rem; color: var(--text-muted, #9aa4b2); margin: 0.5rem 0 0; text-align: center; min-height: 1.2em; }
+    .status-msg.warn { color: #f0c14b; }
+    .status-msg.ok { color: #3dd68c; font-weight: 700; }
+    .btn-row { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.85rem; }
+    .btn-row .btn { width: 100%; }
+    .btn-row .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.3); }
+    .card-note { margin: 0.85rem 0 0; font-size: 0.74rem; color: var(--text-muted, #9aa4b2); text-align: center; }
+    .done-icon { width: 64px; height: 64px; margin: 0.25rem auto 0.85rem; border-radius: 50%; background: rgba(61,214,140,0.15); border: 2px solid rgba(61,214,140,0.45); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; animation: popIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .done-sub { text-align: center; color: var(--text-muted, #9aa4b2); font-size: 0.88rem; margin: 0 0 1rem; line-height: 1.45; }
+    .back-link { display: block; text-align: center; margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted, #9aa4b2); text-decoration: none; }
+    .back-link:hover { color: #3dd68c; }
   </style>
 </head>
 <body>
-  <div class="ad-page">
-    <div class="ad-card">
-      <p class="ad-eyebrow">Free download · Ad tasks</p>
-      <h1 class="ad-title">Complete 5 ad tasks</h1>
-      <p class="ad-file" id="ad-file">…</p>
-      <div class="progress-wrap">
-        <div class="progress-meta">
-          <span id="progress-label">0 / 5 completed</span>
-          <span id="progress-pct">0%</span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      </div>
-      <div class="done-banner" id="done-banner">All ad tasks complete — continue to download</div>
-      <div class="task-list" id="task-list"></div>
-      <div class="ad-actions">
-        <button type="button" class="btn btn-download" id="ad-continue" disabled>Continue to Download</button>
-        <a class="btn btn-outline" href="main.html">Back to Home</a>
-      </div>
-      <p class="ad-note">Open each ad → wait 60s → return here. Premium skips all tasks.</p>
-    </div>
+  <div class="ad-backdrop"></div>
+  <div class="ad-stage">
+    <div class="card-stack" id="card-stack"></div>
   </div>
   <script>
   (function () {
     "use strict";
     var WAIT_SEC = 60;
-    var TASK_COUNT = 5;
+    var AD_COUNT = 5;
     var params = new URLSearchParams(window.location.search);
     var file = params.get("file") || "";
     var label = params.get("label") || file || "Your file";
-    document.getElementById("ad-file").textContent = label;
-    var btnContinue = document.getElementById("ad-continue");
-    var listEl = document.getElementById("task-list");
-    var progressFill = document.getElementById("progress-fill");
-    var progressLabel = document.getElementById("progress-label");
-    var progressPct = document.getElementById("progress-pct");
-    var doneBanner = document.getElementById("done-banner");
+    var stack = document.getElementById("card-stack");
     if (!file) {
-      listEl.innerHTML = "<p style='color:#f66;text-align:center'>Missing file. Go back and try again.</p>";
+      stack.innerHTML = '<div class="pop-card is-active" style="position:relative"><p class="card-title">Error</p><p class="status-msg warn">Missing file. Go back and try again.</p><div class="btn-row"><a class="btn btn-outline" href="main.html">Back to Home</a></div></div>';
       return;
     }
     var AD_OFFERS = [
@@ -112,91 +88,51 @@
       var s = sec % 60;
       return m + ":" + (s < 10 ? "0" : "") + s;
     }
-    var selected = shuffle(AD_OFFERS).slice(0, TASK_COUNT);
-    var completed = 0;
-    var doneFlags = [];
-    function updateProgress() {
-      var pct = Math.round((completed / TASK_COUNT) * 100);
-      progressFill.style.width = pct + "%";
-      progressLabel.textContent = completed + " / " + TASK_COUNT + " completed";
-      progressPct.textContent = pct + "%";
-      if (completed >= TASK_COUNT) {
-        btnContinue.disabled = false;
-        doneBanner.classList.add("show");
-        btnContinue.focus();
+    var offers = shuffle(AD_OFFERS).slice(0, AD_COUNT);
+    var currentIndex = 0;
+    var cards = [];
+    function buildDots(activeIdx) {
+      var html = '<div class="step-dots">';
+      for (var i = 0; i < AD_COUNT + 1; i++) {
+        var cls = "step-dot";
+        if (i < activeIdx) cls += " done";
+        if (i === activeIdx) cls += " on";
+        html += '<span class="' + cls + '"></span>';
       }
+      html += "</div>";
+      return html;
     }
-    function unlockNext() {
-      var items = listEl.querySelectorAll(".task-item");
-      for (var i = 0; i < items.length; i++) {
-        if (!doneFlags[i]) {
-          items[i].classList.remove("locked");
-          items[i].classList.add("active");
-          break;
-        }
-      }
-    }
-    selected.forEach(function (offer, index) {
-      doneFlags[index] = false;
-      var item = document.createElement("div");
-      item.className = "task-item" + (index === 0 ? " active" : " locked");
-      var head = document.createElement("div");
-      head.className = "task-head";
-      var num = document.createElement("span");
-      num.className = "task-num";
-      num.textContent = String(index + 1);
-      var textWrap = document.createElement("div");
-      var title = document.createElement("p");
-      title.className = "task-title";
-      title.textContent = "Visit advertisement #" + (index + 1);
-      var desc = document.createElement("p");
-      desc.className = "task-desc";
-      desc.textContent = "Open the ad page, wait 60 seconds, then return here.";
-      textWrap.appendChild(title);
-      textWrap.appendChild(desc);
-      head.appendChild(num);
-      head.appendChild(textWrap);
-      var body = document.createElement("div");
-      body.className = "task-body";
-      var offerName = document.createElement("p");
-      offerName.className = "ad-offer-name";
-      offerName.textContent = offer.name;
-      body.appendChild(offerName);
-      var timerBox = document.createElement("div");
-      timerBox.className = "timer-box";
-      timerBox.hidden = true;
-      var timerLabel = document.createElement("p");
-      timerLabel.className = "timer-label";
-      timerLabel.textContent = "Stay on the ad page";
-      var timerValue = document.createElement("div");
-      timerValue.className = "timer-value";
-      timerValue.textContent = formatTime(WAIT_SEC);
-      var timerHint = document.createElement("p");
-      timerHint.className = "timer-hint";
-      timerHint.textContent = "Timer starts when you open the ad";
-      timerBox.appendChild(timerLabel);
-      timerBox.appendChild(timerValue);
-      timerBox.appendChild(timerHint);
-      body.appendChild(timerBox);
-      var status = document.createElement("p");
-      status.className = "status-msg";
-      status.textContent = "Click Open Ad to start.";
-      body.appendChild(status);
-      var btnOpen = document.createElement("button");
-      btnOpen.type = "button";
-      btnOpen.className = "btn btn-download";
-      btnOpen.textContent = "Open Ad";
-      var btnDone = document.createElement("button");
-      btnDone.type = "button";
-      btnDone.className = "btn btn-outline";
-      btnDone.textContent = "Mark Complete";
-      btnDone.disabled = true;
-      btnDone.hidden = true;
-      body.appendChild(btnOpen);
-      body.appendChild(btnDone);
-      item.appendChild(head);
-      item.appendChild(body);
-      listEl.appendChild(item);
+    function makeAdCard(offer, adNum) {
+      var card = document.createElement("div");
+      card.className = "pop-card";
+      card.dataset.step = String(adNum - 1);
+      card.innerHTML =
+        buildDots(adNum - 1) +
+        '<p class="card-eyebrow">Ad task ' + adNum + ' of ' + AD_COUNT + '</p>' +
+        '<h1 class="card-title">Visit advertisement</h1>' +
+        '<p class="card-file"></p>' +
+        '<div class="offer-wrap"><span class="offer-badge"></span></div>' +
+        '<div class="timer-box" hidden>' +
+          '<p class="timer-label">Stay on the ad page</p>' +
+          '<div class="timer-value">' + formatTime(WAIT_SEC) + '</div>' +
+          '<p class="timer-hint">Timer starts when you open the ad</p>' +
+        '</div>' +
+        '<p class="status-msg">Click Open Ad to start the 60s timer.</p>' +
+        '<div class="btn-row">' +
+          '<button type="button" class="btn btn-download btn-open">Open Ad</button>' +
+          '<button type="button" class="btn btn-outline btn-done" disabled hidden>Mark Complete</button>' +
+        '</div>' +
+        '<p class="card-note">Open ad → wait 60s → return → mark complete</p>' +
+        '<a class="back-link" href="main.html">← Back to Home</a>';
+      card.querySelector(".card-file").textContent = label;
+      card.querySelector(".offer-badge").textContent = offer.name;
+      var timerBox = card.querySelector(".timer-box");
+      var timerValue = card.querySelector(".timer-value");
+      var timerLabel = card.querySelector(".timer-label");
+      var timerHint = card.querySelector(".timer-hint");
+      var status = card.querySelector(".status-msg");
+      var btnOpen = card.querySelector(".btn-open");
+      var btnDone = card.querySelector(".btn-done");
       var opened = false;
       var timerReady = false;
       var tick = null;
@@ -211,7 +147,7 @@
         btnDone.hidden = false;
         btnDone.disabled = true;
         btnDone.textContent = "Mark Complete";
-        timerValue.classList.remove("done");
+        timerValue.classList.remove("ready");
         timerValue.textContent = formatTime(left);
         timerLabel.textContent = "Waiting…";
         timerHint.textContent = "Come back after the timer finishes";
@@ -228,7 +164,7 @@
           tick = null;
           timerReady = true;
           timerValue.textContent = "Ready";
-          timerValue.classList.add("done");
+          timerValue.classList.add("ready");
           timerLabel.textContent = "Time complete";
           timerHint.textContent = "You can mark this task complete";
           status.className = "status-msg ok";
@@ -237,7 +173,6 @@
         }, 1000);
       });
       btnDone.addEventListener("click", function () {
-        if (doneFlags[index]) return;
         if (!opened) {
           status.className = "status-msg warn";
           status.textContent = "Open the ad first.";
@@ -248,29 +183,57 @@
           status.textContent = "Wait for the 60 second timer.";
           return;
         }
-        doneFlags[index] = true;
-        completed += 1;
         if (tick) { clearInterval(tick); tick = null; }
-        item.classList.remove("active");
-        item.classList.add("done");
-        num.textContent = "✓";
-        body.style.pointerEvents = "none";
-        btnOpen.disabled = true;
-        btnDone.disabled = true;
-        btnDone.textContent = "Completed ✓";
-        status.className = "status-msg ok";
-        status.textContent = "Task completed.";
-        updateProgress();
-        unlockNext();
+        goToStep(adNum);
       });
+      return card;
+    }
+    function makeDoneCard() {
+      var card = document.createElement("div");
+      card.className = "pop-card";
+      card.dataset.step = String(AD_COUNT);
+      card.innerHTML =
+        buildDots(AD_COUNT) +
+        '<div class="done-icon">✓</div>' +
+        '<p class="card-eyebrow">All tasks done</p>' +
+        '<h1 class="card-title">Download unlocked</h1>' +
+        '<p class="card-file"></p>' +
+        '<p class="done-sub">You completed all 5 ad tasks.<br/>Continue to start your download.</p>' +
+        '<div class="btn-row">' +
+          '<button type="button" class="btn btn-download btn-continue">Continue to Download</button>' +
+          '<a class="btn btn-outline" href="main.html">Back to Home</a>' +
+        '</div>';
+      card.querySelector(".card-file").textContent = label;
+      card.querySelector(".btn-continue").addEventListener("click", function () {
+        var q = "file=" + encodeURIComponent(file);
+        if (label && label !== file) q += "&label=" + encodeURIComponent(label);
+        window.location.href = "download.html?" + q;
+      });
+      return card;
+    }
+    offers.forEach(function (offer, i) {
+      cards.push(makeAdCard(offer, i + 1));
     });
-    updateProgress();
-    btnContinue.addEventListener("click", function () {
-      if (btnContinue.disabled || completed < TASK_COUNT) return;
-      var q = "file=" + encodeURIComponent(file);
-      if (label && label !== file) q += "&label=" + encodeURIComponent(label);
-      window.location.href = "download.html?" + q;
-    });
+    cards.push(makeDoneCard());
+    cards.forEach(function (c) { stack.appendChild(c); });
+    function goToStep(nextIndex) {
+      if (nextIndex < 0 || nextIndex > AD_COUNT) return;
+      if (nextIndex === currentIndex) return;
+      var prev = cards[currentIndex];
+      var next = cards[nextIndex];
+      prev.classList.remove("is-active");
+      prev.classList.add("is-exit");
+      next.classList.remove("is-exit");
+      next.classList.add("is-enter-prep");
+      void next.offsetWidth;
+      next.classList.remove("is-enter-prep");
+      next.classList.add("is-active");
+      currentIndex = nextIndex;
+      setTimeout(function () {
+        prev.classList.remove("is-exit");
+      }, 500);
+    }
+    cards[0].classList.add("is-active");
   })();
   </script>
 </body>
