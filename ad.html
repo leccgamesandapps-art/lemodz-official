@@ -1,1 +1,233 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEMODZ — Ad Tasks</title>
+  <meta name="theme-color" content="#070b10" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --card-w: min(100vw - 1.5rem, 420px); }
+    body { margin: 0; min-height: 100vh; background: var(--bg, #070b10); overflow-x: hidden; }
+    .ad-stage { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.25rem 0.85rem 1.75rem; position: relative; }
+    .ad-backdrop { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(61,214,140,0.08), transparent 55%), rgba(0,0,0,0.55); pointer-events: none; z-index: 0; }
+    .card-stack { position: relative; width: var(--card-w); z-index: 1; min-height: 440px; }
+    .pop-card { position: absolute; inset: 0 auto auto 0; width: 100%; background: var(--bg-card, #101820); border: 1px solid var(--border, rgba(255,255,255,0.1)); border-radius: 18px; padding: 1.45rem 1.25rem 1.3rem; box-shadow: 0 20px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03); opacity: 0; transform: translateY(28px) scale(0.94); pointer-events: none; transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); will-change: opacity, transform; }
+    .pop-card.is-active { position: relative; opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; z-index: 2; }
+    .pop-card.is-exit { opacity: 0; transform: translateY(-22px) scale(0.96); pointer-events: none; z-index: 1; }
+    .pop-card.is-enter-prep { opacity: 0; transform: translateY(28px) scale(0.94); }
+    .step-dots { display: flex; justify-content: center; gap: 0.4rem; margin-bottom: 1rem; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 0.3s, transform 0.3s; }
+    .step-dot.on { background: #3dd68c; transform: scale(1.2); }
+    .step-dot.done { background: rgba(61,214,140,0.45); }
+    .card-eyebrow { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, #9aa4b2); margin: 0 0 0.35rem; text-align: center; }
+    .card-title { font-family: var(--pixel, "Press Start 2P", monospace); font-size: 0.56rem; line-height: 1.55; letter-spacing: 1px; color: var(--accent, #3dd68c); margin: 0 0 0.55rem; text-align: center; }
+    .card-file { font-weight: 600; font-size: 0.86rem; color: var(--text, #e8eef7); margin: 0 0 0.85rem; text-align: center; word-break: break-all; }
+    .type-chip { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.28rem 0.65rem; border-radius: 999px; margin: 0 auto 0.55rem; }
+    .type-chip.search { color: #6cb6ff; background: rgba(108,182,255,0.12); border: 1px solid rgba(108,182,255,0.35); }
+    .type-chip.watch { color: #ff7b9c; background: rgba(255,123,156,0.12); border: 1px solid rgba(255,123,156,0.35); }
+    .type-chip.gaming { color: #b794f6; background: rgba(183,148,246,0.12); border: 1px solid rgba(183,148,246,0.35); }
+    .type-chip.cooking { color: #f6ad55; background: rgba(246,173,85,0.12); border: 1px solid rgba(246,173,85,0.35); }
+    .type-chip.sponsor { color: #f0c14b; background: rgba(240,193,75,0.12); border: 1px solid rgba(240,193,75,0.35); }
+    .type-chip.shopping { color: #3dd68c; background: rgba(61,214,140,0.12); border: 1px solid rgba(61,214,140,0.35); }
+    .type-chip.news { color: #90cdf4; background: rgba(144,205,244,0.12); border: 1px solid rgba(144,205,244,0.35); }
+    .type-chip.fitness { color: #68d391; background: rgba(104,211,145,0.12); border: 1px solid rgba(104,211,145,0.35); }
+    .offer-badge { display: block; font-size: 0.9rem; font-weight: 700; color: #e8eef7; margin: 0 0 0.25rem; text-align: center; }
+    .offer-desc { font-size: 0.78rem; color: var(--text-muted, #9aa4b2); text-align: center; margin: 0 0 0.75rem; line-height: 1.4; }
+    .offer-wrap { text-align: center; }
+    .timer-box { text-align: center; margin: 0.65rem 0; padding: 0.85rem; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); }
+    .timer-label { font-size: 0.7rem; color: var(--text-muted, #9aa4b2); margin: 0 0 0.2rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .timer-value { font-size: 2rem; font-weight: 800; color: #3dd68c; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; line-height: 1.2; }
+    .timer-value.ready { color: #f0c14b; font-size: 1.2rem; }
+    .timer-hint { font-size: 0.74rem; color: var(--text-muted, #9aa4b2); margin: 0.3rem 0 0; }
+    .status-msg { font-size: 0.8rem; color: var(--text-muted, #9aa4b2); margin: 0.5rem 0 0; text-align: center; min-height: 1.2em; }
+    .status-msg.warn { color: #f0c14b; }
+    .status-msg.ok { color: #3dd68c; font-weight: 700; }
+    .btn-row { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.85rem; }
+    .btn-row .btn { width: 100%; }
+    .btn-row .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.3); }
+    .card-note { margin: 0.85rem 0 0; font-size: 0.74rem; color: var(--text-muted, #9aa4b2); text-align: center; }
+    .done-icon { width: 64px; height: 64px; margin: 0.25rem auto 0.85rem; border-radius: 50%; background: rgba(61,214,140,0.15); border: 2px solid rgba(61,214,140,0.45); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; animation: popIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .done-sub { text-align: center; color: var(--text-muted, #9aa4b2); font-size: 0.88rem; margin: 0 0 1rem; line-height: 1.45; }
+    .back-link { display: block; text-align: center; margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted, #9aa4b2); text-decoration: none; }
+    .back-link:hover { color: #3dd68c; }
+  </style>
+</head>
+<body>
+  <div class="ad-backdrop"></div>
+  <div class="ad-stage"><div class="card-stack" id="card-stack"></div></div>
+  <script>
+  (function () {
+    "use strict";
+    var TIMER_OPTIONS = [10, 20, 30, 40, 50, 60];
+    var AD_COUNT = 5;
+    var params = new URLSearchParams(window.location.search);
+    var file = params.get("file") || "";
+    var label = params.get("label") || file || "Your file";
+    var stack = document.getElementById("card-stack");
+    if (!file) {
+      stack.innerHTML = '<div class="pop-card is-active" style="position:relative"><p class="card-title">Error</p><p class="status-msg warn">Missing file.</p><div class="btn-row"><a class="btn btn-outline" href="main.html">Back to Home</a></div></div>';
+      return;
+    }
+    var AD_POOL = [
+      { type: "search", typeLabel: "🔍 Searching", name: "Search Spotlight", desc: "Open the search page and explore the results for the required time.", url: "https://www.google.com/search?q=minecraft+bedrock+mods", action: "Open Search" },
+      { type: "search", typeLabel: "🔍 Searching", name: "Web Search Task", desc: "Search the topic, scroll the results, then return when the timer ends.", url: "https://duckduckgo.com/?q=minecraft+mcaddon+download", action: "Open Search" },
+      { type: "watch", typeLabel: "▶️ Watching", name: "Watch Video Clip", desc: "Open the video page and watch until the timer finishes.", url: "https://www.youtube.com/results?search_query=minecraft+bedrock+addons", action: "Open Video" },
+      { type: "watch", typeLabel: "▶️ Watching", name: "Stream Preview", desc: "Open the watch page and stay for the full timer.", url: "https://www.youtube.com/results?search_query=minecraft+commands+tutorial", action: "Open Video" },
+      { type: "gaming", typeLabel: "🎮 Gaming Ad", name: "Game Offer", desc: "Visit this gaming promotion page for the timed duration.", url: "https://www.minecraft.net/en-us", action: "Open Gaming Ad" },
+      { type: "gaming", typeLabel: "🎮 Gaming Ad", name: "Community Hub", desc: "Open the gaming community page and wait out the timer.", url: "https://www.reddit.com/r/MCPE/", action: "Open Gaming Ad" },
+      { type: "cooking", typeLabel: "🍳 Cooking Ad", name: "Recipe Spotlight", desc: "Visit this cooking / food ad page for the required time.", url: "https://www.google.com/search?q=easy+dinner+recipes", action: "Open Cooking Ad" },
+      { type: "cooking", typeLabel: "🍳 Cooking Ad", name: "Kitchen Tips", desc: "Open the food tips page and stay until the timer ends.", url: "https://www.youtube.com/results?search_query=quick+cooking+recipes", action: "Open Cooking Ad" },
+      { type: "sponsor", typeLabel: "⭐ Sponsorship", name: "Sponsored Partner", desc: "Visit the sponsor page and complete the timed view.", url: "https://www.bing.com/search?q=best+minecraft+servers+2026", action: "Open Sponsor" },
+      { type: "sponsor", typeLabel: "⭐ Sponsorship", name: "Brand Spotlight", desc: "Open this sponsored listing and wait for the timer.", url: "https://www.google.com/search?q=minecraft+marketplace+addons", action: "Open Sponsor" },
+      { type: "shopping", typeLabel: "🛒 Shopping", name: "Product Discovery", desc: "Browse the shopping results for the full timer length.", url: "https://www.google.com/search?q=minecraft+merchandise&tbm=shop", action: "Open Shopping" },
+      { type: "news", typeLabel: "📰 News Ad", name: "News Feature", desc: "Open the news / article search and stay for the timer.", url: "https://news.google.com/search?q=minecraft+bedrock", action: "Open News" },
+      { type: "fitness", typeLabel: "💪 Fitness Ad", name: "Workout Promo", desc: "Visit this fitness ad page until the countdown ends.", url: "https://www.youtube.com/results?search_query=home+workout+beginner", action: "Open Fitness Ad" }
+    ];
+    function shuffle(arr) {
+      var a = arr.slice();
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+    function pickTimer() { return TIMER_OPTIONS[Math.floor(Math.random() * TIMER_OPTIONS.length)]; }
+    function formatTime(sec) {
+      var m = Math.floor(sec / 60);
+      var s = sec % 60;
+      return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+    var selected = shuffle(AD_POOL).slice(0, AD_COUNT).map(function (ad) {
+      return { type: ad.type, typeLabel: ad.typeLabel, name: ad.name, desc: ad.desc, url: ad.url, action: ad.action, waitSec: pickTimer() };
+    });
+    var currentIndex = 0;
+    var cards = [];
+    function buildDots(activeIdx) {
+      var html = '<div class="step-dots">';
+      for (var i = 0; i < AD_COUNT + 1; i++) {
+        var cls = "step-dot";
+        if (i < activeIdx) cls += " done";
+        if (i === activeIdx) cls += " on";
+        html += '<span class="' + cls + '"></span>';
+      }
+      return html + "</div>";
+    }
+    function makeAdCard(offer, adNum) {
+      var waitSec = offer.waitSec;
+      var card = document.createElement("div");
+      card.className = "pop-card";
+      card.dataset.step = String(adNum - 1);
+      card.innerHTML =
+        buildDots(adNum - 1) +
+        '<p class="card-eyebrow">Ad task ' + adNum + ' of ' + AD_COUNT + '</p>' +
+        '<h1 class="card-title">Complete this ad</h1>' +
+        '<p class="card-file"></p>' +
+        '<div class="offer-wrap">' +
+          '<span class="type-chip ' + offer.type + '">' + offer.typeLabel + '</span>' +
+          '<span class="offer-badge"></span>' +
+          '<p class="offer-desc"></p>' +
+        '</div>' +
+        '<div class="timer-box" hidden>' +
+          '<p class="timer-label">Stay on the ad page</p>' +
+          '<div class="timer-value">' + formatTime(waitSec) + '</div>' +
+          '<p class="timer-hint">Timer starts when you open the ad</p>' +
+        '</div>' +
+        '<p class="status-msg">Click to open — timer is ' + waitSec + ' seconds.</p>' +
+        '<div class="btn-row">' +
+          '<button type="button" class="btn btn-download btn-open"></button>' +
+          '<button type="button" class="btn btn-outline btn-done" disabled hidden>Mark Complete</button>' +
+        '</div>' +
+        '<p class="card-note">Open ad → wait ' + waitSec + 's → return → mark complete</p>' +
+        '<a class="back-link" href="main.html">← Back to Home</a>';
+      card.querySelector(".card-file").textContent = label;
+      card.querySelector(".offer-badge").textContent = offer.name;
+      card.querySelector(".offer-desc").textContent = offer.desc;
+      card.querySelector(".btn-open").textContent = offer.action;
+      var timerBox = card.querySelector(".timer-box");
+      var timerValue = card.querySelector(".timer-value");
+      var timerLabel = card.querySelector(".timer-label");
+      var timerHint = card.querySelector(".timer-hint");
+      var status = card.querySelector(".status-msg");
+      var btnOpen = card.querySelector(".btn-open");
+      var btnDone = card.querySelector(".btn-done");
+      var opened = false, timerReady = false, tick = null, left = waitSec;
+      btnOpen.addEventListener("click", function () {
+        window.open(offer.url, "_blank", "noopener,noreferrer");
+        opened = true;
+        if (tick) clearInterval(tick);
+        left = waitSec; timerReady = false;
+        timerBox.hidden = false; btnDone.hidden = false; btnDone.disabled = true;
+        btnDone.textContent = "Mark Complete";
+        timerValue.classList.remove("ready");
+        timerValue.textContent = formatTime(left);
+        timerLabel.textContent = "Waiting…";
+        timerHint.textContent = "Come back after the timer finishes";
+        status.className = "status-msg";
+        status.textContent = "Ad opened. Wait " + waitSec + " seconds, then return.";
+        btnOpen.textContent = "Open Again";
+        tick = setInterval(function () {
+          left -= 1;
+          if (left > 0) { timerValue.textContent = formatTime(left); return; }
+          clearInterval(tick); tick = null; timerReady = true;
+          timerValue.textContent = "Ready"; timerValue.classList.add("ready");
+          timerLabel.textContent = "Time complete";
+          timerHint.textContent = "You can mark this task complete";
+          status.className = "status-msg ok";
+          status.textContent = "Timer done. Click Mark Complete.";
+          btnDone.disabled = false;
+        }, 1000);
+      });
+      btnDone.addEventListener("click", function () {
+        if (!opened) { status.className = "status-msg warn"; status.textContent = "Open the ad first."; return; }
+        if (!timerReady) { status.className = "status-msg warn"; status.textContent = "Wait for the " + waitSec + "s timer."; return; }
+        if (tick) { clearInterval(tick); tick = null; }
+        goToStep(adNum);
+      });
+      return card;
+    }
+    function makeDoneCard() {
+      var card = document.createElement("div");
+      card.className = "pop-card";
+      card.dataset.step = String(AD_COUNT);
+      card.innerHTML =
+        buildDots(AD_COUNT) +
+        '<div class="done-icon">✓</div>' +
+        '<p class="card-eyebrow">All tasks done</p>' +
+        '<h1 class="card-title">Download unlocked</h1>' +
+        '<p class="card-file"></p>' +
+        '<p class="done-sub">You completed all 5 random ad tasks.<br/>Continue to start your download.</p>' +
+        '<div class="btn-row">' +
+          '<button type="button" class="btn btn-download btn-continue">Continue to Download</button>' +
+          '<a class="btn btn-outline" href="main.html">Back to Home</a>' +
+        '</div>';
+      card.querySelector(".card-file").textContent = label;
+      card.querySelector(".btn-continue").addEventListener("click", function () {
+        var q = "file=" + encodeURIComponent(file);
+        if (label && label !== file) q += "&label=" + encodeURIComponent(label);
+        window.location.href = "download.html?" + q;
+      });
+      return card;
+    }
+    selected.forEach(function (offer, i) { cards.push(makeAdCard(offer, i + 1)); });
+    cards.push(makeDoneCard());
+    cards.forEach(function (c) { stack.appendChild(c); });
+    function goToStep(nextIndex) {
+      if (nextIndex < 0 || nextIndex > AD_COUNT || nextIndex === currentIndex) return;
+      var prev = cards[currentIndex], next = cards[nextIndex];
+      prev.classList.remove("is-active"); prev.classList.add("is-exit");
+      next.classList.remove("is-exit"); next.classList.add("is-enter-prep");
+      void next.offsetWidth;
+      next.classList.remove("is-enter-prep"); next.classList.add("is-active");
+      currentIndex = nextIndex;
+      setTimeout(function () { prev.classList.remove("is-exit"); }, 500);
+    }
+    cards[0].classList.add("is-active");
+  })();
+  </script>
+</body>
+</html>
