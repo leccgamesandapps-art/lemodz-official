@@ -3,7 +3,6 @@
 
   const USERS_KEY = "lemodz_users";
   const SESSION_KEY = "lemodz_session";
-  const OWNER_PREMIUM = ["lanceefi2011", "lanceefi2026", "leccgamesandapps"];
 
   function getUsers() {
     try { return JSON.parse(localStorage.getItem(USERS_KEY) || "{}"); } catch (e) { return {}; }
@@ -17,20 +16,11 @@
     else localStorage.removeItem(SESSION_KEY);
   }
 
-  function isOwnerPremiumEligible(user) {
-    if (!user || !user.email) return false;
-    var e = String(user.email).toLowerCase();
-    var name = String(user.name || "").toLowerCase();
-    return OWNER_PREMIUM.some(function (k) {
-      return e.indexOf(k) !== -1 || name.indexOf(k) !== -1;
-    });
-  }
-
   function isPremium(user) {
+    if (window.LEPremium) return LEPremium.isPremium(user);
     if (!user) return false;
-    if (isOwnerPremiumEligible(user)) return true;
     if (!user.isPremium) return false;
-    if (!user.premiumUntil) return true;
+    if (!user.premiumUntil) return false;
     return Date.now() < user.premiumUntil;
   }
 
@@ -178,27 +168,17 @@
     var meta = CAT_META[target] || CAT_META.adminabuse;
     if (listTitle) listTitle.textContent = meta.title;
     if (listSub) listSub.textContent = meta.sub;
-
-    if (homeHero) {
-      homeHero.classList.toggle("hero-compact", target !== "all");
-    }
-
+    if (homeHero) homeHero.classList.toggle("hero-compact", target !== "all");
     applySearch();
-
     var header = document.querySelector(".section-header");
     if (header) {
-      try {
-        header.scrollIntoView({ behavior: "smooth", block: "start" });
-      } catch (err) {
-        header.scrollIntoView(true);
-      }
+      try { header.scrollIntoView({ behavior: "smooth", block: "start" }); }
+      catch (err) { header.scrollIntoView(true); }
     }
   }
 
   document.querySelectorAll(".cat-btn").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      setCategory(btn.dataset.category);
-    });
+    btn.addEventListener("click", function () { setCategory(btn.dataset.category); });
   });
 
   function applySearch() {
@@ -256,6 +236,7 @@
   }
 
   function updateDirectButton() {
+    currentUser = getSession();
     var ok = isPremium(currentUser);
     if (btnDirect) {
       btnDirect.disabled = !ok;
@@ -349,17 +330,9 @@
         email: u.email,
         name: u.name,
         isPremium: !!u.isPremium,
-        premiumUntil: u.premiumUntil || null
+        premiumUntil: u.premiumUntil || null,
+        redeemedCodes: u.redeemedCodes || []
       };
-      if (isOwnerPremiumEligible(currentUser)) {
-        currentUser.isPremium = true;
-        currentUser.premiumUntil = Date.now() + 365 * 24 * 60 * 60 * 1000;
-        if (users[key]) {
-          users[key].isPremium = true;
-          users[key].premiumUntil = currentUser.premiumUntil;
-          saveUsers(users);
-        }
-      }
       setSession(currentUser);
       if (msg) { msg.textContent = "Signed in!"; msg.classList.remove("error"); }
       refreshAuthUI();
@@ -381,27 +354,26 @@
         if (msg) { msg.textContent = "Account already exists. Sign in instead."; msg.classList.add("error"); }
         return;
       }
-      var isOwner = OWNER_PREMIUM.some(function (k) {
-        return key.indexOf(k) !== -1 || String(name).toLowerCase().indexOf(k) !== -1;
-      });
       users[key] = {
         email: key,
         name: name.trim(),
         password: password,
-        isPremium: isOwner,
-        premiumUntil: isOwner ? Date.now() + 365 * 24 * 60 * 60 * 1000 : null
+        isPremium: false,
+        premiumUntil: null,
+        redeemedCodes: []
       };
       saveUsers(users);
       currentUser = {
         email: key,
         name: name.trim(),
-        isPremium: isOwner,
-        premiumUntil: users[key].premiumUntil
+        isPremium: false,
+        premiumUntil: null,
+        redeemedCodes: []
       };
       setSession(currentUser);
       if (msg) { msg.textContent = "Account created!"; msg.classList.remove("error"); }
       refreshAuthUI();
-      toast(isOwner ? "Account created · Premium unlocked" : "Account created — you're signed in", "success");
+      toast("Account created — you're signed in", "success");
       setTimeout(closeAuthModal, 350);
     });
   }
@@ -440,6 +412,7 @@
 
   if (btnDirect) {
     btnDirect.addEventListener("click", function () {
+      currentUser = getSession();
       if (!isPremium(currentUser)) {
         closeLootModal();
         openPremiumModal();
@@ -467,8 +440,49 @@
   function openPremiumModal() {
     if (premiumModal) premiumModal.hidden = false;
     if (lootOverlay) lootOverlay.hidden = false;
-    if (premiumMsg) premiumMsg.textContent = "";
+    if (premiumMsg) {
+      premiumMsg.textContent = "";
+      premiumMsg.classList.remove("error");
+    }
     lockBody(true);
+    currentUser = getSession();
+    if (window.LEPremium) {
+      var el = document.getElementById("premium-countdown");
+      var note = document.getElementById("premium-lock-note");
+      var user = LEPremium.getSession();
+      var active = LEPremium.isPremium(user);
+      var ms = LEPremium.remainingMs(user);
+      if (el) {
+        if (active && ms > 0) {
+          el.hidden = false;
+          el.innerHTML = '<span class="cd-label">Premium</span> <span class="cd-time">' + LEPremium.formatCountdown(ms) + '</span>';
+        } else {
+          el.hidden = true;
+          el.innerHTML = "";
+        }
+      }
+      var plans = document.querySelector(".premium-plans");
+      var redeem = document.querySelector(".code-redeem");
+      if (plans) {
+        plans.classList.remove("is-locked");
+        plans.querySelectorAll(".plan-card").forEach(function (c) { c.disabled = false; });
+      }
+      if (redeem) {
+        redeem.classList.remove("is-locked");
+        var ci = document.getElementById("premium-code");
+        var br = document.getElementById("btn-redeem-code");
+        if (ci) ci.disabled = false;
+        if (br) br.disabled = false;
+      }
+      if (note) {
+        if (active && ms > 0) {
+          note.hidden = false;
+          note.textContent = "Premium active. Buy or redeem again to add more time.";
+        } else {
+          note.hidden = true;
+        }
+      }
+    }
   }
   function closePremiumModal() {
     if (premiumModal) premiumModal.hidden = true;
@@ -479,114 +493,31 @@
   }
   if (premiumClose) premiumClose.addEventListener("click", closePremiumModal);
 
-  var WHOP_CHECKOUT = {
-    day: "https://whop.com/checkout/ch_yNDF6JY0TS1O2jl/",
-    week: "https://whop.com/checkout/ch_F2KB7UiJcMZEiSi/",
-    month: "https://whop.com/checkout/ch_75gZ3WLHi3LAIyo/",
-    year: "https://whop.com/checkout/ch_iSnaOuFuChX3Jw5/"
-  };
-
-  document.querySelectorAll(".plan-card").forEach(function (card) {
-    card.addEventListener("click", function () {
-      var plan = card.dataset.plan;
-      var days = parseInt(card.dataset.days || "0", 10);
-      if (!currentUser) {
-        if (premiumMsg) premiumMsg.textContent = "Please Sign In or Sign Up first.";
-        closePremiumModal();
-        openAuthModal("signup");
-        toast("Create an account first", "error");
-        return;
-      }
-      var url = WHOP_CHECKOUT[plan];
-      if (url) {
-        window.open(url, "_blank", "noopener,noreferrer");
-        if (premiumMsg) premiumMsg.textContent = "Complete payment on Whop, then return here.";
-        toast("Opening Whop checkout…", "success");
-        return;
-      }
-      var until = Date.now() + days * 24 * 60 * 60 * 1000;
-      currentUser.isPremium = true;
-      currentUser.premiumUntil = until;
-      setSession(currentUser);
-      var users = getUsers();
-      if (users[currentUser.email]) {
-        users[currentUser.email].isPremium = true;
-        users[currentUser.email].premiumUntil = until;
-        saveUsers(users);
-      }
-      if (premiumMsg) premiumMsg.textContent = "Premium activated.";
-      refreshAuthUI();
-      toast("Premium activated!", "success");
-      setTimeout(closePremiumModal, 800);
-    });
-  });
-
-  function activatePremiumDays(days, sourceLabel) {
-    if (!currentUser) return false;
-    var until = Date.now() + days * 24 * 60 * 60 * 1000;
-    if (currentUser.premiumUntil && currentUser.premiumUntil > Date.now()) {
-      until = Math.max(until, currentUser.premiumUntil);
-    }
-    currentUser.isPremium = true;
-    currentUser.premiumUntil = until;
-    setSession(currentUser);
-    var users = getUsers();
-    if (users[currentUser.email]) {
-      users[currentUser.email].isPremium = true;
-      users[currentUser.email].premiumUntil = until;
-      saveUsers(users);
-    }
-    refreshAuthUI();
-    updateDirectButton();
-    return true;
-  }
-
-  var btnRedeem = document.getElementById("btn-redeem-code");
-  var codeInput = document.getElementById("premium-code");
-  if (btnRedeem && codeInput) {
-    function redeemCode() {
-      var raw = (codeInput.value || "").trim();
-      if (!raw) {
-        if (premiumMsg) { premiumMsg.textContent = "Enter a code first."; premiumMsg.classList.add("error"); }
-        toast("Enter a code first", "error");
-        return;
-      }
-      if (!currentUser) {
-        if (premiumMsg) { premiumMsg.textContent = "Sign in first to redeem a code."; premiumMsg.classList.add("error"); }
+  if (window.LEPremium) {
+    LEPremium.bindUI({
+      countdownEl: document.getElementById("premium-countdown"),
+      plansWrap: document.querySelector(".premium-plans"),
+      redeemWrap: document.querySelector(".code-redeem"),
+      codeInput: document.getElementById("premium-code"),
+      btnRedeem: document.getElementById("btn-redeem-code"),
+      msgEl: document.getElementById("premium-msg"),
+      lockNote: document.getElementById("premium-lock-note"),
+      onNeedAuth: function () {
         closePremiumModal();
         openAuthModal("signin");
-        toast("Sign in to redeem code", "error");
-        return;
-      }
-      var codes = {
-        "FreePremiun2026": 30
-      };
-      var days = codes[raw];
-      if (!days) {
-        var key = Object.keys(codes).find(function (k) { return k.toLowerCase() === raw.toLowerCase(); });
-        days = key ? codes[key] : null;
-      }
-      if (!days) {
-        if (premiumMsg) { premiumMsg.textContent = "Invalid code."; premiumMsg.classList.add("error"); }
-        toast("Invalid code", "error");
-        return;
-      }
-      if (activatePremiumDays(days, "code")) {
-        codeInput.value = "";
-        if (premiumMsg) {
-          premiumMsg.textContent = "Code redeemed — 1 month Premium unlocked!";
-          premiumMsg.classList.remove("error");
-        }
-        toast("Premium unlocked for 1 month!", "success");
+      },
+      onToast: function (msg, type) { toast(msg, type); },
+      onRedeemed: function () {
+        currentUser = LEPremium.getSession();
+        refreshAuthUI();
+        updateDirectButton();
         setTimeout(closePremiumModal, 900);
       }
-    }
-    btnRedeem.addEventListener("click", redeemCode);
-    codeInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        redeemCode();
-      }
+    });
+    LEPremium.onPremiumChange(function (user) {
+      currentUser = user;
+      refreshAuthUI();
+      updateDirectButton();
     });
   }
 
