@@ -1,18 +1,17 @@
 /**
- * LEMODZ Premium — buy, redeem, countdown, lock state
- * Shared module used by app.js
+ * LEMODZ Premium — buy, redeem, countdown, stack time
  */
 (function (global) {
   "use strict";
 
   var USERS_KEY = "lemodz_users";
   var SESSION_KEY = "lemodz_session";
-  var OWNER_PREMIUM = ["lanceefi2011", "lanceefi2026", "leccgamesandapps"];
 
-  // Secret promo codes → days (never display these in UI)
+  // Secret promo codes → days (not shown in UI)
+  // Each code is one use per user account
   var PROMO_CODES = {
-    FreePremiun2026: 30,
-    FreePremium2026: 30
+    FreePremium2026: 30,
+    FreePremiun2026: 30
   };
 
   var WHOP_CHECKOUT = {
@@ -50,32 +49,15 @@
     else localStorage.removeItem(SESSION_KEY);
   }
 
-  function isOwnerPremiumEligible(user) {
-    if (!user || !user.email) return false;
-    var e = String(user.email).toLowerCase();
-    var name = String(user.name || "").toLowerCase();
-    return OWNER_PREMIUM.some(function (k) {
-      return e.indexOf(k) !== -1 || name.indexOf(k) !== -1;
-    });
-  }
-
   function isPremium(user) {
     if (!user) return false;
-    if (isOwnerPremiumEligible(user)) return true;
     if (!user.isPremium) return false;
-    if (!user.premiumUntil) return true;
+    if (!user.premiumUntil) return false;
     return Date.now() < user.premiumUntil;
   }
 
   function remainingMs(user) {
-    if (!user) return 0;
-    if (isOwnerPremiumEligible(user)) {
-      if (user.premiumUntil && user.premiumUntil > Date.now()) {
-        return user.premiumUntil - Date.now();
-      }
-      return 365 * 24 * 60 * 60 * 1000;
-    }
-    if (!user.isPremium || !user.premiumUntil) return 0;
+    if (!user || !user.isPremium || !user.premiumUntil) return 0;
     return Math.max(0, user.premiumUntil - Date.now());
   }
 
@@ -89,6 +71,7 @@
     return days + "d " + hours + "h " + mins + "m " + secs + "s";
   }
 
+  /** Stack: add days onto current remaining time (or from now if expired) */
   function activatePremiumDays(user, days) {
     if (!user) return null;
     var add = days * 24 * 60 * 60 * 1000;
@@ -104,28 +87,49 @@
     if (users[user.email]) {
       users[user.email].isPremium = true;
       users[user.email].premiumUntil = until;
+      if (user.redeemedCodes) {
+        users[user.email].redeemedCodes = user.redeemedCodes;
+      }
       saveUsers(users);
     }
     notifyChange();
     return user;
   }
 
+  function normalizeCode(raw) {
+    return String(raw || "").trim();
+  }
+
+  function resolvePromoDays(raw) {
+    var code = normalizeCode(raw);
+    if (!code) return null;
+    if (PROMO_CODES[code] != null) return { key: code, days: PROMO_CODES[code] };
+    var key = Object.keys(PROMO_CODES).find(function (k) {
+      return k.toLowerCase() === code.toLowerCase();
+    });
+    if (key) return { key: key, days: PROMO_CODES[key] };
+    return null;
+  }
+
   function redeemCode(user, rawCode) {
     if (!user) return { ok: false, error: "signin" };
-    var raw = String(rawCode || "").trim();
-    if (!raw) return { ok: false, error: "empty" };
-
-    var days = PROMO_CODES[raw];
-    if (!days) {
-      var key = Object.keys(PROMO_CODES).find(function (k) {
-        return k.toLowerCase() === raw.toLowerCase();
-      });
-      days = key ? PROMO_CODES[key] : null;
+    var resolved = resolvePromoDays(rawCode);
+    if (!resolved) {
+      var empty = !normalizeCode(rawCode);
+      return { ok: false, error: empty ? "empty" : "invalid" };
     }
-    if (!days) return { ok: false, error: "invalid" };
 
-    activatePremiumDays(user, days);
-    return { ok: true, days: days, user: getSession() };
+    var redeemed = user.redeemedCodes || [];
+    var users = getUsers();
+    var stored = users[user.email] || {};
+    var storedRedeemed = stored.redeemedCodes || redeemed;
+    if (storedRedeemed.indexOf(resolved.key) !== -1) {
+      return { ok: false, error: "used" };
+    }
+
+    user.redeemedCodes = storedRedeemed.concat([resolved.key]);
+    activatePremiumDays(user, resolved.days);
+    return { ok: true, days: resolved.days, user: getSession() };
   }
 
   function openWhopCheckout(plan) {
@@ -166,7 +170,7 @@
       else msgEl.classList.remove("error");
     }
 
-    function updateLockState(user) {
+    function updateUI(user) {
       var active = isPremium(user);
       var ms = remainingMs(user);
 
@@ -183,27 +187,31 @@
         }
       }
 
+      // Do NOT lock buy / redeem — stacking is allowed
       if (plansWrap) {
-        plansWrap.classList.toggle("is-locked", active);
+        plansWrap.classList.remove("is-locked");
         plansWrap.querySelectorAll(".plan-card").forEach(function (card) {
-          card.disabled = active;
-          card.setAttribute("aria-disabled", active ? "true" : "false");
+          card.disabled = false;
+          card.setAttribute("aria-disabled", "false");
         });
       }
       if (redeemWrap) {
-        redeemWrap.classList.toggle("is-locked", active);
-        if (codeInput) codeInput.disabled = active;
-        if (btnRedeem) btnRedeem.disabled = active;
+        redeemWrap.classList.remove("is-locked");
+        if (codeInput) codeInput.disabled = false;
+        if (btnRedeem) btnRedeem.disabled = false;
       }
       if (lockNote) {
-        lockNote.hidden = !active;
-        if (active) {
+        if (active && ms > 0) {
+          lockNote.hidden = false;
           lockNote.textContent =
-            "Premium active — buy & redeem locked until timer reaches 0.";
+            "Premium active. Buy or redeem again to add more time.";
+        } else {
+          lockNote.hidden = true;
+          lockNote.textContent = "";
         }
       }
 
-      if (user && user.isPremium && ms <= 0 && !isOwnerPremiumEligible(user)) {
+      if (user && user.isPremium && ms <= 0) {
         user.isPremium = false;
         user.premiumUntil = null;
         setSession(user);
@@ -218,8 +226,7 @@
     }
 
     function tick() {
-      var user = getSession();
-      updateLockState(user);
+      updateUI(getSession());
     }
 
     if (countdownTimer) clearInterval(countdownTimer);
@@ -234,23 +241,18 @@
       plansWrap.querySelectorAll(".plan-card").forEach(function (card) {
         card.addEventListener("click", function () {
           var user = getSession();
-          if (isPremium(user)) {
-            setMsg("You already have Premium. Wait until the timer ends.", true);
-            return;
-          }
           if (!user) {
             setMsg("Please Sign In or Sign Up first.", true);
             if (typeof opts.onNeedAuth === "function") opts.onNeedAuth();
             return;
           }
           var plan = card.dataset.plan;
-          // Buy ONLY opens Whop checkout — never grant Premium here.
-          // Premium is granted after successful payment (webhook / return)
-          // or via redeem code. Cancelled checkout = no Premium.
           if (openWhopCheckout(plan)) {
-            setMsg("Finish payment on Whop to unlock Premium. Closing checkout does not activate Premium.");
+            setMsg(
+              "Finish payment on Whop to add Premium time. Closing checkout does not activate Premium."
+            );
             if (typeof opts.onToast === "function") {
-              opts.onToast("Complete payment on Whop to unlock Premium", "success");
+              opts.onToast("Complete payment on Whop to add Premium time", "success");
             }
             return;
           }
@@ -264,10 +266,6 @@
 
     function doRedeem() {
       var user = getSession();
-      if (isPremium(user)) {
-        setMsg("You already have Premium. Wait until the timer ends.", true);
-        return;
-      }
       if (!user) {
         setMsg("Sign in first to redeem a code.", true);
         if (typeof opts.onNeedAuth === "function") opts.onNeedAuth();
@@ -278,16 +276,24 @@
       if (!result.ok) {
         if (result.error === "empty") setMsg("Enter a code first.", true);
         else if (result.error === "invalid") setMsg("Invalid code.", true);
+        else if (result.error === "used")
+          setMsg("You already used this code on this account.", true);
         else setMsg("Could not redeem.", true);
         if (typeof opts.onToast === "function") {
-          opts.onToast(result.error === "invalid" ? "Invalid code" : "Redeem failed", "error");
+          var t =
+            result.error === "used"
+              ? "Code already used"
+              : result.error === "invalid"
+              ? "Invalid code"
+              : "Redeem failed";
+          opts.onToast(t, "error");
         }
         return;
       }
       if (codeInput) codeInput.value = "";
-      setMsg("Code redeemed — " + result.days + " days Premium unlocked!");
+      setMsg("Code redeemed — +" + result.days + " days Premium stacked!");
       if (typeof opts.onToast === "function") {
-        opts.onToast("Premium unlocked for " + result.days + " days!", "success");
+        opts.onToast("+" + result.days + " days Premium added!", "success");
       }
       tick();
       if (typeof opts.onRedeemed === "function") opts.onRedeemed(result);
@@ -303,7 +309,7 @@
       });
     }
 
-    return { tick: tick, updateLockState: updateLockState };
+    return { tick: tick, updateUI: updateUI };
   }
 
   global.LEPremium = {
@@ -312,7 +318,6 @@
     getUsers: getUsers,
     saveUsers: saveUsers,
     isPremium: isPremium,
-    isOwnerPremiumEligible: isOwnerPremiumEligible,
     remainingMs: remainingMs,
     formatCountdown: formatCountdown,
     activatePremiumDays: activatePremiumDays,
