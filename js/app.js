@@ -251,27 +251,35 @@
 
   function updateLootButton() {
     if (!lootContinue) return;
-    var ok = isValidLootUrl(currentLootUrl);
+    var hasFile = !!(currentDirectUrl && String(currentDirectUrl).length > 1);
     lootContinue.removeAttribute("href");
     lootContinue.setAttribute("role", "button");
     lootContinue.style.cursor = "pointer";
-    if (ok) {
+    lootContinue.textContent = "Watch Ad & Download";
+    if (hasFile) {
       lootContinue.classList.remove("is-disabled");
       lootContinue.setAttribute("aria-disabled", "false");
-      lootContinue.textContent = "Continue with LootLabs";
       lootContinue.onclick = function (e) {
         e.preventDefault();
         e.stopPropagation();
-        window.open(currentLootUrl, "_blank", "noopener,noreferrer");
+        var file = currentDirectUrl;
+        var m = String(file).match(/[?&]file=([^&]+)/);
+        var fname = m ? decodeURIComponent(m[1]) : String(file).replace(/^.*\//, "");
+        if (!fname || fname === "#" || fname === "download.html") {
+          toast("Download file not set for this mod", "error");
+          return;
+        }
+        var q = "file=" + encodeURIComponent(fname);
+        if (currentLabel) q += "&label=" + encodeURIComponent(currentLabel);
+        window.location.assign("/ad.html?" + q);
       };
     } else {
       lootContinue.classList.add("is-disabled");
       lootContinue.setAttribute("aria-disabled", "true");
-      lootContinue.textContent = "LootLabs link coming soon";
       lootContinue.onclick = function (e) {
         e.preventDefault();
         e.stopPropagation();
-        toast("LootLabs link not set for this file yet", "error");
+        toast("Download file not set for this mod", "error");
       };
     }
   }
