@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LEMODZ — Complete Tasks</title>
+  <title>LEMODZ — Complete Ad Tasks</title>
   <meta name="theme-color" content="#070b10" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,7 +13,7 @@
     .ad-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem 1rem 2rem}
     .ad-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem 1.25rem 1.35rem;max-width:460px;width:100%;box-shadow:var(--shadow)}
     .ad-eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:0 0 .4rem}
-    .ad-title{font-family:var(--pixel);font-size:.65rem;line-height:1.55;letter-spacing:1px;color:var(--accent);margin:0 0 .65rem}
+    .ad-title{font-family:var(--pixel);font-size:.62rem;line-height:1.55;letter-spacing:1px;color:var(--accent);margin:0 0 .65rem}
     .ad-file{font-weight:600;font-size:.9rem;color:var(--text);margin:0 0 1rem;word-break:break-all}
     .progress-wrap{margin-bottom:1rem}
     .progress-meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;font-weight:600}
@@ -22,7 +22,7 @@
     .task-list{display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.15rem}
     .task-item{border:1px solid var(--border);border-radius:12px;padding:.85rem .9rem;background:rgba(0,0,0,.22);transition:border-color .2s,opacity .2s}
     .task-item.done{border-color:rgba(61,214,140,.45);background:rgba(61,214,140,.08)}
-    .task-item.locked{opacity:.45;pointer-events:none}
+    .task-item.locked{opacity:.42;pointer-events:none}
     .task-item.active{border-color:rgba(61,214,140,.55);box-shadow:0 0 0 1px rgba(61,214,140,.15)}
     .task-head{display:flex;align-items:flex-start;gap:.55rem;margin-bottom:.55rem}
     .task-num{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text-muted);font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -30,18 +30,16 @@
     .task-title{font-size:.88rem;font-weight:700;color:var(--text);margin:0;line-height:1.35}
     .task-desc{font-size:.78rem;color:var(--text-muted);margin:.15rem 0 0;line-height:1.4}
     .task-body{padding-left:1.9rem}
-    .task-body .btn{width:100%;margin-top:.35rem}
-    .task-body input[type=text]{width:100%;padding:.6rem .75rem;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.3);color:var(--text);font-size:.9rem;margin-top:.25rem}
-    .task-body input[type=text]:focus{outline:none;border-color:var(--accent)}
-    .quiz-options{display:flex;flex-direction:column;gap:.4rem;margin-top:.35rem}
-    .quiz-opt{text-align:left;padding:.55rem .75rem;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.25);color:var(--text);font-size:.85rem;cursor:pointer;font-weight:600}
-    .quiz-opt:hover{border-color:rgba(61,214,140,.5)}
-    .quiz-opt.wrong{border-color:rgba(255,90,90,.5);opacity:.7}
-    .check-row{display:flex;align-items:center;gap:.55rem;margin-top:.35rem;font-size:.85rem;color:var(--text);cursor:pointer;user-select:none}
-    .check-row input{width:18px;height:18px;accent-color:#3dd68c}
-    .tap-target{display:flex;align-items:center;justify-content:center;min-width:64px;min-height:64px;margin:.4rem auto 0;border-radius:14px;border:2px dashed rgba(61,214,140,.45);background:rgba(61,214,140,.08);font-size:1.5rem;cursor:pointer;user-select:none}
-    .tap-count{font-size:.78rem;color:var(--text-muted);margin-top:.35rem;text-align:center}
-    .wait-timer{font-size:1.6rem;font-weight:800;color:var(--accent);text-align:center;margin:.35rem 0;font-variant-numeric:tabular-nums}
+    .task-body .btn{width:100%;margin-top:.4rem}
+    .ad-offer-name{font-size:.82rem;font-weight:700;color:#f0c14b;margin:0 0 .25rem}
+    .timer-box{text-align:center;margin:.5rem 0 .15rem;padding:.65rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08)}
+    .timer-label{font-size:.72rem;color:var(--text-muted);margin:0 0 .2rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+    .timer-value{font-size:1.75rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:.03em}
+    .timer-value.done{color:#f0c14b;font-size:1.1rem}
+    .timer-hint{font-size:.75rem;color:var(--text-muted);margin:.25rem 0 0}
+    .status-msg{font-size:.78rem;color:var(--text-muted);margin:.35rem 0 0;text-align:center}
+    .status-msg.warn{color:#f0c14b}
+    .status-msg.ok{color:#3dd68c;font-weight:700}
     .ad-actions{display:flex;flex-direction:column;gap:.6rem}
     .ad-actions .btn{width:100%}
     .ad-actions .btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
@@ -53,8 +51,8 @@
 <body>
   <div class="ad-page">
     <div class="ad-card">
-      <p class="ad-eyebrow">Free download · Complete tasks</p>
-      <h1 class="ad-title">Finish 5 tasks to unlock</h1>
+      <p class="ad-eyebrow">Free download · Ad tasks</p>
+      <h1 class="ad-title">Complete 5 ad tasks</h1>
       <p class="ad-file" id="ad-file">…</p>
       <div class="progress-wrap">
         <div class="progress-meta">
@@ -63,49 +61,216 @@
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
-      <div class="done-banner" id="done-banner">All tasks complete — continue to download</div>
+      <div class="done-banner" id="done-banner">All ad tasks complete — continue to download</div>
       <div class="task-list" id="task-list"></div>
       <div class="ad-actions">
         <button type="button" class="btn btn-download" id="ad-continue" disabled>Continue to Download</button>
         <a class="btn btn-outline" href="main.html">Back to Home</a>
       </div>
-      <p class="ad-note">Premium skips tasks with Free to Download.</p>
+      <p class="ad-note">Open each ad → wait 60s → return here. Premium skips all tasks.</p>
     </div>
   </div>
   <script>
-  (function(){
+  (function () {
     "use strict";
-    var params=new URLSearchParams(window.location.search);
-    var file=params.get("file")||"";
-    var label=params.get("label")||file||"Your file";
-    var TASK_COUNT=5;
-    document.getElementById("ad-file").textContent=label;
-    var btnContinue=document.getElementById("ad-continue");
-    var listEl=document.getElementById("task-list");
-    var progressFill=document.getElementById("progress-fill");
-    var progressLabel=document.getElementById("progress-label");
-    var progressPct=document.getElementById("progress-pct");
-    var doneBanner=document.getElementById("done-banner");
-    if(!file){listEl.innerHTML="<p style='color:#f66;text-align:center'>Missing file. Go back and try again.</p>";return;}
-    function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-    var POOL=[
-      {id:"click",title:"Click the confirm button",desc:"Press the green button below once.",render:function(body,onDone){var b=document.createElement("button");b.type="button";b.className="btn btn-download";b.textContent="I confirm";b.addEventListener("click",function(){b.disabled=true;b.textContent="Done ✓";onDone();});body.appendChild(b);}},
-      {id:"wait",title:"Wait a few seconds",desc:"Stay on this page until the timer ends.",render:function(body,onDone){var sec=4+Math.floor(Math.random()*3);var el=document.createElement("div");el.className="wait-timer";el.textContent=sec+"s";body.appendChild(el);var t=setInterval(function(){sec-=1;if(sec>0)el.textContent=sec+"s";else{clearInterval(t);el.textContent="Ready ✓";onDone();}},1000);}},
-      {id:"type",title:"Type the code",desc:"Type the word shown, then submit.",render:function(body,onDone){var words=["MINE","CRAFT","LEMODZ","BEDROCK","DOWNLOAD","SERVER"];var word=words[Math.floor(Math.random()*words.length)];var hint=document.createElement("p");hint.className="task-desc";hint.innerHTML="Type: <strong style='color:#3dd68c'>"+word+"</strong>";body.appendChild(hint);var input=document.createElement("input");input.type="text";input.placeholder="Type here…";input.autocomplete="off";input.spellcheck=false;body.appendChild(input);var b=document.createElement("button");b.type="button";b.className="btn btn-outline";b.textContent="Submit";b.addEventListener("click",function(){if(input.value.trim().toUpperCase()===word){input.disabled=true;b.disabled=true;b.textContent="Correct ✓";onDone();}else{input.style.borderColor="rgba(255,90,90,0.7)";setTimeout(function(){input.style.borderColor="";},600);}});input.addEventListener("keydown",function(e){if(e.key==="Enter")b.click();});body.appendChild(b);}},
-      {id:"quiz",title:"Answer a quick question",desc:"Pick the correct answer.",render:function(body,onDone){var quizzes=[{q:"What game is this mod for?",opts:["Minecraft","Roblox","Fortnite"],ans:0},{q:"What is LEMODZ?",opts:["A browser","Minecraft mods site","A phone"],ans:1},{q:"Bedrock is a version of…",opts:["Minecraft","Windows only","A fruit"],ans:0},{q:"What file type are mods here?",opts:[".exe",".mcaddon",".zip only"],ans:1}];var q=quizzes[Math.floor(Math.random()*quizzes.length)];var qEl=document.createElement("p");qEl.className="task-desc";qEl.textContent=q.q;body.appendChild(qEl);var wrap=document.createElement("div");wrap.className="quiz-options";q.opts.forEach(function(opt,i){var btn=document.createElement("button");btn.type="button";btn.className="quiz-opt";btn.textContent=opt;btn.addEventListener("click",function(){if(i===q.ans){wrap.querySelectorAll("button").forEach(function(x){x.disabled=true;});btn.style.borderColor="rgba(61,214,140,0.8)";btn.textContent=opt+" ✓";onDone();}else{btn.classList.add("wrong");btn.disabled=true;}});wrap.appendChild(btn);});body.appendChild(wrap);}},
-      {id:"check",title:"Confirm you are human",desc:"Check the box below.",render:function(body,onDone){var labelEl=document.createElement("label");labelEl.className="check-row";var cb=document.createElement("input");cb.type="checkbox";var span=document.createElement("span");span.textContent="I'm not a robot";labelEl.appendChild(cb);labelEl.appendChild(span);body.appendChild(labelEl);cb.addEventListener("change",function(){if(cb.checked){cb.disabled=true;onDone();}});}},
-      {id:"tap",title:"Tap the target",desc:"Tap the box 3 times.",render:function(body,onDone){var need=3,count=0;var target=document.createElement("div");target.className="tap-target";target.textContent="🎯";target.setAttribute("role","button");target.tabIndex=0;var cnt=document.createElement("p");cnt.className="tap-count";cnt.textContent="0 / "+need+" taps";body.appendChild(target);body.appendChild(cnt);function hit(){if(count>=need)return;count+=1;cnt.textContent=count+" / "+need+" taps";if(count>=need){target.textContent="✓";target.style.borderStyle="solid";target.style.borderColor="rgba(61,214,140,0.7)";onDone();}}target.addEventListener("click",hit);target.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();hit();}});}},
-      {id:"visit",title:"Open the support page",desc:"Click the link, then mark as done.",render:function(body,onDone){var a=document.createElement("a");a.className="btn btn-outline";a.href="https://lemodz-official-site.vercel.app/main.html";a.target="_blank";a.rel="noopener noreferrer";a.textContent="Open page";a.style.display="block";a.style.marginTop="0.25rem";body.appendChild(a);var b=document.createElement("button");b.type="button";b.className="btn btn-download";b.textContent="I opened it";b.style.marginTop="0.45rem";var opened=false;a.addEventListener("click",function(){opened=true;});b.addEventListener("click",function(){if(!opened){a.style.borderColor="rgba(240,193,75,0.7)";return;}b.disabled=true;b.textContent="Done ✓";onDone();});body.appendChild(b);}},
-      {id:"math",title:"Solve a simple math",desc:"Enter the correct number.",render:function(body,onDone){var x=2+Math.floor(Math.random()*8);var y=2+Math.floor(Math.random()*8);var ans=x+y;var hint=document.createElement("p");hint.className="task-desc";hint.innerHTML="What is <strong style='color:#3dd68c'>"+x+" + "+y+"</strong>?";body.appendChild(hint);var input=document.createElement("input");input.type="text";input.inputMode="numeric";input.placeholder="Answer";input.autocomplete="off";body.appendChild(input);var btn=document.createElement("button");btn.type="button";btn.className="btn btn-outline";btn.textContent="Check";btn.addEventListener("click",function(){if(parseInt(input.value.trim(),10)===ans){input.disabled=true;btn.disabled=true;btn.textContent="Correct ✓";onDone();}else{input.style.borderColor="rgba(255,90,90,0.7)";setTimeout(function(){input.style.borderColor="";},600);}});input.addEventListener("keydown",function(e){if(e.key==="Enter")btn.click();});body.appendChild(btn);}}
+    var WAIT_SEC = 60;
+    var TASK_COUNT = 5;
+    var params = new URLSearchParams(window.location.search);
+    var file = params.get("file") || "";
+    var label = params.get("label") || file || "Your file";
+    document.getElementById("ad-file").textContent = label;
+    var btnContinue = document.getElementById("ad-continue");
+    var listEl = document.getElementById("task-list");
+    var progressFill = document.getElementById("progress-fill");
+    var progressLabel = document.getElementById("progress-label");
+    var progressPct = document.getElementById("progress-pct");
+    var doneBanner = document.getElementById("done-banner");
+    if (!file) {
+      listEl.innerHTML = "<p style='color:#f66;text-align:center'>Missing file. Go back and try again.</p>";
+      return;
+    }
+    var AD_OFFERS = [
+      { name: "Sponsored Offer A", url: "https://www.google.com/search?q=minecraft+bedrock+mods" },
+      { name: "Sponsored Offer B", url: "https://www.youtube.com/results?search_query=minecraft+bedrock+addons" },
+      { name: "Sponsored Offer C", url: "https://www.bing.com/search?q=minecraft+mcaddon" },
+      { name: "Sponsored Offer D", url: "https://duckduckgo.com/?q=minecraft+bedrock+admin+mods" },
+      { name: "Sponsored Offer E", url: "https://www.reddit.com/r/MCPE/" },
+      { name: "Sponsored Offer F", url: "https://www.minecraft.net/en-us" },
+      { name: "Sponsored Offer G", url: "https://www.youtube.com/results?search_query=minecraft+commands" },
+      { name: "Sponsored Offer H", url: "https://www.google.com/search?q=lemodz+minecraft" }
     ];
-    var selected=shuffle(POOL).slice(0,TASK_COUNT);
-    var completed=0;
-    var doneFlags=[];
-    function updateProgress(){var pct=Math.round((completed/TASK_COUNT)*100);progressFill.style.width=pct+"%";progressLabel.textContent=completed+" / "+TASK_COUNT+" completed";progressPct.textContent=pct+"%";if(completed>=TASK_COUNT){btnContinue.disabled=false;doneBanner.classList.add("show");btnContinue.focus();}}
-    function unlockNext(){var items=listEl.querySelectorAll(".task-item");for(var i=0;i<items.length;i++){if(!doneFlags[i]){items[i].classList.remove("locked");items[i].classList.add("active");break;}}}
-    selected.forEach(function(task,index){doneFlags[index]=false;var item=document.createElement("div");item.className="task-item"+(index===0?" active":" locked");var head=document.createElement("div");head.className="task-head";var num=document.createElement("span");num.className="task-num";num.textContent=String(index+1);var textWrap=document.createElement("div");var title=document.createElement("p");title.className="task-title";title.textContent=task.title;var desc=document.createElement("p");desc.className="task-desc";desc.textContent=task.desc;textWrap.appendChild(title);textWrap.appendChild(desc);head.appendChild(num);head.appendChild(textWrap);var body=document.createElement("div");body.className="task-body";item.appendChild(head);item.appendChild(body);listEl.appendChild(item);function onDone(){if(doneFlags[index])return;doneFlags[index]=true;completed+=1;item.classList.remove("active");item.classList.add("done");num.textContent="✓";body.style.pointerEvents="none";updateProgress();unlockNext();}task.render(body,onDone);});
+    function shuffle(arr) {
+      var a = arr.slice();
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+    function formatTime(sec) {
+      var m = Math.floor(sec / 60);
+      var s = sec % 60;
+      return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+    var selected = shuffle(AD_OFFERS).slice(0, TASK_COUNT);
+    var completed = 0;
+    var doneFlags = [];
+    function updateProgress() {
+      var pct = Math.round((completed / TASK_COUNT) * 100);
+      progressFill.style.width = pct + "%";
+      progressLabel.textContent = completed + " / " + TASK_COUNT + " completed";
+      progressPct.textContent = pct + "%";
+      if (completed >= TASK_COUNT) {
+        btnContinue.disabled = false;
+        doneBanner.classList.add("show");
+        btnContinue.focus();
+      }
+    }
+    function unlockNext() {
+      var items = listEl.querySelectorAll(".task-item");
+      for (var i = 0; i < items.length; i++) {
+        if (!doneFlags[i]) {
+          items[i].classList.remove("locked");
+          items[i].classList.add("active");
+          break;
+        }
+      }
+    }
+    selected.forEach(function (offer, index) {
+      doneFlags[index] = false;
+      var item = document.createElement("div");
+      item.className = "task-item" + (index === 0 ? " active" : " locked");
+      var head = document.createElement("div");
+      head.className = "task-head";
+      var num = document.createElement("span");
+      num.className = "task-num";
+      num.textContent = String(index + 1);
+      var textWrap = document.createElement("div");
+      var title = document.createElement("p");
+      title.className = "task-title";
+      title.textContent = "Visit advertisement #" + (index + 1);
+      var desc = document.createElement("p");
+      desc.className = "task-desc";
+      desc.textContent = "Open the ad page, wait 60 seconds, then return here.";
+      textWrap.appendChild(title);
+      textWrap.appendChild(desc);
+      head.appendChild(num);
+      head.appendChild(textWrap);
+      var body = document.createElement("div");
+      body.className = "task-body";
+      var offerName = document.createElement("p");
+      offerName.className = "ad-offer-name";
+      offerName.textContent = offer.name;
+      body.appendChild(offerName);
+      var timerBox = document.createElement("div");
+      timerBox.className = "timer-box";
+      timerBox.hidden = true;
+      var timerLabel = document.createElement("p");
+      timerLabel.className = "timer-label";
+      timerLabel.textContent = "Stay on the ad page";
+      var timerValue = document.createElement("div");
+      timerValue.className = "timer-value";
+      timerValue.textContent = formatTime(WAIT_SEC);
+      var timerHint = document.createElement("p");
+      timerHint.className = "timer-hint";
+      timerHint.textContent = "Timer starts when you open the ad";
+      timerBox.appendChild(timerLabel);
+      timerBox.appendChild(timerValue);
+      timerBox.appendChild(timerHint);
+      body.appendChild(timerBox);
+      var status = document.createElement("p");
+      status.className = "status-msg";
+      status.textContent = "Click Open Ad to start.";
+      body.appendChild(status);
+      var btnOpen = document.createElement("button");
+      btnOpen.type = "button";
+      btnOpen.className = "btn btn-download";
+      btnOpen.textContent = "Open Ad";
+      var btnDone = document.createElement("button");
+      btnDone.type = "button";
+      btnDone.className = "btn btn-outline";
+      btnDone.textContent = "Mark Complete";
+      btnDone.disabled = true;
+      btnDone.hidden = true;
+      body.appendChild(btnOpen);
+      body.appendChild(btnDone);
+      item.appendChild(head);
+      item.appendChild(body);
+      listEl.appendChild(item);
+      var opened = false;
+      var timerReady = false;
+      var tick = null;
+      var left = WAIT_SEC;
+      btnOpen.addEventListener("click", function () {
+        window.open(offer.url, "_blank", "noopener,noreferrer");
+        opened = true;
+        if (tick) clearInterval(tick);
+        left = WAIT_SEC;
+        timerReady = false;
+        timerBox.hidden = false;
+        btnDone.hidden = false;
+        btnDone.disabled = true;
+        btnDone.textContent = "Mark Complete";
+        timerValue.classList.remove("done");
+        timerValue.textContent = formatTime(left);
+        timerLabel.textContent = "Waiting…";
+        timerHint.textContent = "Come back after the timer finishes";
+        status.className = "status-msg";
+        status.textContent = "Ad opened. Wait 60 seconds, then return.";
+        btnOpen.textContent = "Open Ad Again";
+        tick = setInterval(function () {
+          left -= 1;
+          if (left > 0) {
+            timerValue.textContent = formatTime(left);
+            return;
+          }
+          clearInterval(tick);
+          tick = null;
+          timerReady = true;
+          timerValue.textContent = "Ready";
+          timerValue.classList.add("done");
+          timerLabel.textContent = "Time complete";
+          timerHint.textContent = "You can mark this task complete";
+          status.className = "status-msg ok";
+          status.textContent = "Timer done. Click Mark Complete.";
+          btnDone.disabled = false;
+        }, 1000);
+      });
+      btnDone.addEventListener("click", function () {
+        if (doneFlags[index]) return;
+        if (!opened) {
+          status.className = "status-msg warn";
+          status.textContent = "Open the ad first.";
+          return;
+        }
+        if (!timerReady) {
+          status.className = "status-msg warn";
+          status.textContent = "Wait for the 60 second timer.";
+          return;
+        }
+        doneFlags[index] = true;
+        completed += 1;
+        if (tick) { clearInterval(tick); tick = null; }
+        item.classList.remove("active");
+        item.classList.add("done");
+        num.textContent = "✓";
+        body.style.pointerEvents = "none";
+        btnOpen.disabled = true;
+        btnDone.disabled = true;
+        btnDone.textContent = "Completed ✓";
+        status.className = "status-msg ok";
+        status.textContent = "Task completed.";
+        updateProgress();
+        unlockNext();
+      });
+    });
     updateProgress();
-    btnContinue.addEventListener("click",function(){if(btnContinue.disabled||completed<TASK_COUNT)return;var q="file="+encodeURIComponent(file);if(label&&label!==file)q+="&label="+encodeURIComponent(label);window.location.href="download.html?"+q;});
+    btnContinue.addEventListener("click", function () {
+      if (btnContinue.disabled || completed < TASK_COUNT) return;
+      var q = "file=" + encodeURIComponent(file);
+      if (label && label !== file) q += "&label=" + encodeURIComponent(label);
+      window.location.href = "download.html?" + q;
+    });
   })();
   </script>
 </body>
