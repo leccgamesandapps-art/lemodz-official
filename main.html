@@ -1,1 +1,92 @@
-PLACEHOLDER_MAIN
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEMODZ — Mods</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header style="padding:16px;display:flex;justify-content:space-between;align-items:center;background:#0f0f13;border-bottom:1px solid #222">
+    <strong style="color:#a29bfe">LEMODZ</strong>
+    <div id="auth-area">
+      <button type="button" id="btn-signin" style="margin-right:8px">Sign In</button>
+      <button type="button" id="btn-signup">Sign Up</button>
+    </div>
+  </header>
+  <main style="padding:20px;max-width:900px;margin:0 auto;color:#eee">
+    <div class="leid-banner" id="leid-banner" hidden>
+      <span><strong>LEID:</strong> <span id="leid-banner-text">Not linked</span></span>
+    </div>
+    <p id="side-account-status">Not signed in</p>
+    <p id="side-leid-status" class="side-leid" hidden></p>
+    <h1>LEMODZ</h1>
+    <p>Official Minecraft Bedrock mods. Auth is balanced with OfficialLEWeb (real Facebook + LEID SSO).</p>
+    <p><a href="https://officialleweb.vercel.app" style="color:#a29bfe">OfficialLEWeb</a> · <a href="https://le-voice-call.vercel.app" style="color:#a29bfe">LEVoiceCall</a></p>
+    <p style="color:#888;font-size:0.9rem">Full mods library: restore main.html from git commit 1e41b81b if needed, keep the Facebook SDK block at the bottom.</p>
+  </main>
+  <div id="auth-modal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000">
+    <div style="background:#1a1a22;padding:24px;border-radius:16px;max-width:400px;width:90%;color:#eee">
+      <button type="button" id="auth-close">✕</button>
+      <p>LEMODZ Account · LEID</p>
+      <form id="form-signin">
+        <label style="display:block;margin:8px 0">LEID / Username<input type="text" id="signin-leid" required style="width:100%;padding:8px;margin-top:4px" /></label>
+        <label style="display:block;margin:8px 0">Password<input type="password" id="signin-pass" required minlength="4" style="width:100%;padding:8px;margin-top:4px" /></label>
+        <button type="submit" style="margin-top:10px;width:100%;padding:10px">Sign In</button>
+        <div style="text-align:center;margin:12px 0;color:#888">or</div>
+        <button type="button" id="btn-continue-leid" style="width:100%;padding:10px;margin-bottom:8px">Continue with OfficialLEWeb LEID</button>
+        <button type="button" id="btn-fb-login" style="width:100%;padding:10px;background:#1877f2;color:#fff;border:none;border-radius:8px">Continue with Facebook</button>
+      </form>
+      <form id="form-signup" style="display:none">
+        <label style="display:block;margin:8px 0">LEID<input type="text" id="signup-leid" required style="width:100%;padding:8px" /></label>
+        <label style="display:block;margin:8px 0">Password<input type="password" id="signup-pass" required minlength="4" style="width:100%;padding:8px" /></label>
+        <button type="submit" style="width:100%;padding:10px;margin-top:10px">Sign Up</button>
+        <button type="button" id="btn-fb-register" style="width:100%;padding:10px;margin-top:8px;background:#1877f2;color:#fff;border:none;border-radius:8px">Sign up with Facebook</button>
+      </form>
+    </div>
+  </div>
+  <div id="fb-root"></div>
+  <script>
+    window.fbAsyncInit = function () {
+      FB.init({ appId: "2338993963576572", cookie: true, xfbml: false, version: "v21.0" });
+      window.fbReady = true;
+    };
+    (function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, "script", "facebook-jssdk"));
+  </script>
+  <script src="js/app.js"></script>
+  <script>
+    function openAuthModal() {
+      var m = document.getElementById("auth-modal");
+      m.hidden = false; m.style.display = "flex";
+    }
+    function closeAuthModal() {
+      var m = document.getElementById("auth-modal");
+      m.hidden = true; m.style.display = "none";
+    }
+    function refreshAuthUI() {
+      var s = window.LEMODZAuth && LEMODZAuth.getSession && LEMODZAuth.getSession();
+      var st = document.getElementById("side-account-status");
+      var ban = document.getElementById("leid-banner");
+      var bt = document.getElementById("leid-banner-text");
+      if (s && s.leid) {
+        if (st) st.textContent = "Signed in as " + s.leid;
+        if (ban) ban.hidden = false;
+        if (bt) bt.textContent = s.leid + (s.facebookId ? " · FB linked" : "");
+      } else {
+        if (st) st.textContent = "Not signed in";
+        if (ban) ban.hidden = true;
+      }
+    }
+    document.getElementById("btn-signin").onclick = openAuthModal;
+    document.getElementById("btn-signup").onclick = openAuthModal;
+    document.getElementById("auth-close").onclick = closeAuthModal;
+    refreshAuthUI();
+  </script>
+</body>
+</html>
