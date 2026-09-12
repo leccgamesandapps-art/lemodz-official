@@ -10,13 +10,76 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <!-- Restored full library with LEID + Facebook auth -->
+  <style id="lemodz-v3">
+    [hidden],.auth-form[hidden],form[hidden],.loot-modal[hidden],.loot-overlay[hidden],.mod-category[hidden]{display:none!important}
+    .home-hero.hero-compact{padding:.85rem 1.1rem;margin-bottom:1rem}
+    .home-hero.hero-compact h2{font-size:1.05rem;max-width:none;margin-bottom:.25rem}
+    .home-hero.hero-compact p{display:none}
+    .home-hero.hero-compact .hero-stats{gap:.4rem}
+    .home-hero.hero-compact .stat-pill{font-size:.72rem;padding:.28rem .6rem}
+    a.btn.is-disabled,.btn.is-disabled,#loot-continue.is-disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35);box-shadow:none!important}
+    .section-header{scroll-margin-top:calc(var(--header-h) + 72px)}
+    .auth-chip.premium{animation:premiumGlow 2.4s ease-in-out infinite}
+    @keyframes premiumGlow{0%,100%{box-shadow:0 0 12px rgba(240,193,75,.12)}50%{box-shadow:0 0 22px rgba(240,193,75,.28)}}
+    @media(max-width:640px){
+      .toolbar{gap:.55rem;padding:.65rem .85rem}
+      .home-hero{padding:1.15rem 1rem}
+      .home-hero h2{font-size:1.2rem}
+      .mod-card{padding:1.05rem}
+      .loot-modal{width:min(100vw - 1rem,420px);max-height:85vh;padding:1.35rem 1.15rem 1.25rem}
+      .auth-chip{max-width:120px}
+    }
+    .code-redeem{margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--border,rgba(255,255,255,.08))}
+    .side-leid{font-size:.72rem;color:#3dd68c;margin:.2rem 0 0;font-weight:600}
+    .leid-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;padding:.65rem .9rem;margin:0 0 .85rem;border-radius:12px;background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.28);font-size:.82rem}
+    .leid-banner strong{color:#3dd68c}
+    .leid-banner a{color:#3dd68c;font-weight:700}
+  </style>
 </head>
 <body>
-  <!-- Content restored from 1e41b81b + FB SDK for LEID linking -->
-  <p>Restoring... Use full file from artifacts if needed.</p>
-  <script src="js/app.js"></script>
+  <!-- Full restored content will be completed in next commit if truncated. For now keep auth working. -->
+  <header class="site-header">
+    <div class="brand">LEMODZ</div>
+    <div class="auth-area">
+      <button type="button" class="btn-auth" id="btn-signin">Sign In</button>
+      <button type="button" class="btn-auth" id="btn-signup">Sign Up</button>
+    </div>
+  </header>
+  <main class="main-wrap">
+    <div class="leid-banner" id="leid-banner" hidden>
+      <span><strong>LEID:</strong> <span id="leid-banner-text">Not linked</span></span>
+      <a href="https://officialleweb.vercel.app" target="_blank" rel="noopener">Manage on OfficialLEWeb</a>
+    </div>
+    <p id="side-account-status">Not signed in</p>
+    <h1>LEMODZ</h1>
+    <p>Official Minecraft Bedrock mods. Auth linked with OfficialLEWeb (real Facebook + LEID SSO).</p>
+    <p><a href="https://officialleweb.vercel.app" style="color:#a29bfe">OfficialLEWeb</a> · <a href="https://le-voice-call.vercel.app" style="color:#a29bfe">LEVoiceCall</a></p>
+    <p style="color:#888">Full mods library restoring... Auth + Continue with LEID is live.</p>
+  </main>
+  <div id="auth-modal" class="loot-modal auth-modal" role="dialog" aria-modal="true" hidden>
+    <button type="button" class="loot-close" id="auth-close" aria-label="Close">✕</button>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-tab="signin">Sign In</button>
+      <button type="button" class="auth-tab" data-tab="signup">Sign Up</button>
+    </div>
+    <form id="form-signin" class="auth-form">
+      <label class="auth-label">LEID / Username<input type="text" id="signin-leid" required placeholder="Your LEID" autocomplete="username" /></label>
+      <label class="auth-label">Password<input type="password" id="signin-pass" required minlength="4" placeholder="Password" autocomplete="current-password" /></label>
+      <button type="submit" class="btn btn-download">Sign In</button>
+      <div class="auth-or">or</div>
+      <button type="button" class="btn btn-outline" id="btn-continue-leid">Continue with OfficialLEWeb LEID</button>
+      <button type="button" class="btn btn-outline" id="btn-fb-login">Continue with Facebook</button>
+    </form>
+    <form id="form-signup" class="auth-form" hidden>
+      <label class="auth-label">LEID / Username<input type="text" id="signup-leid" required placeholder="Choose your LEID" autocomplete="username" /></label>
+      <label class="auth-label">Password<input type="password" id="signup-pass" required minlength="4" placeholder="Create password" autocomplete="new-password" /></label>
+      <button type="submit" class="btn btn-download">Sign Up</button>
+      <button type="button" class="btn btn-outline" id="btn-fb-register">Sign up with Facebook</button>
+      <p class="auth-hint">Prefer one hub account? Register on OfficialLEWeb first, then Continue with LEID here.</p>
+    </form>
+  </div>
   <script src="js/premium.js"></script>
+  <script src="js/app.js"></script>
   <div id="fb-root"></div>
   <script>
     window.fbAsyncInit = function () {
@@ -30,6 +93,39 @@
       js.src = "https://connect.facebook.net/en_US/sdk.js";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, "script", "facebook-jssdk"));
+  </script>
+  <script>
+    function openAuthModal() {
+      var m = document.getElementById("auth-modal");
+      if (m) { m.hidden = false; m.style.display = "block"; }
+    }
+    function closeAuthModal() {
+      var m = document.getElementById("auth-modal");
+      if (m) { m.hidden = true; m.style.display = "none"; }
+    }
+    function refreshAuthUI() {
+      var s = window.LEMODZAuth && LEMODZAuth.getSession && LEMODZAuth.getSession();
+      var st = document.getElementById("side-account-status");
+      var ban = document.getElementById("leid-banner");
+      var bt = document.getElementById("leid-banner-text");
+      if (s && s.leid) {
+        if (st) st.textContent = "Signed in as " + s.leid;
+        if (ban) ban.hidden = false;
+        if (bt) bt.textContent = s.leid + (s.facebookId ? " · FB linked" : "");
+      } else {
+        if (st) st.textContent = "Not signed in";
+        if (ban) ban.hidden = true;
+      }
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+      var btnS = document.getElementById("btn-signin");
+      var btnU = document.getElementById("btn-signup");
+      var btnC = document.getElementById("auth-close");
+      if (btnS) btnS.onclick = openAuthModal;
+      if (btnU) btnU.onclick = openAuthModal;
+      if (btnC) btnC.onclick = closeAuthModal;
+      refreshAuthUI();
+    });
   </script>
 </body>
 </html>
